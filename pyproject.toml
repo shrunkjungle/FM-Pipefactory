@@ -1,0 +1,32 @@
+[tool.poetry]
+name = "pipefactory"
+version = "0.0.0"
+description = "A Full Matrix Project"
+authors = [
+    "Freddy Wordingham <freddy@digilab.co.uk>",
+    "Tim Dodwell <tim@digilab.co.uk>",
+]
+readme = "README.md"
+packages = [{ include = "pipefactory" }]
+
+[tool.poetry.dependencies]
+python = "^3.10"
+mpi4py = { version = "^3.1.5", optional = true }
+gmsh = "*"
+numpy = "*"
+pytest-cov = "^4.1.0"
+meshio = "*"
+scipy = "*"
+
+[tool.poetry.dev-dependencies]
+pytest = "^7.4.3"
+
+[tool.poetry.extras]
+parallel = ["mpi4py"]
+
+[tool.poetry.group.dev.dependencies]
+ipykernel = "^6.27.1"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
