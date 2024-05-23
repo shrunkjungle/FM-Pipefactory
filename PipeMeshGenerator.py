@@ -83,7 +83,7 @@ name = "foo"
 
 mesh_info = PipeParam(outer_radius = 0.0365, 
                       thickness = 0.01, 
-                      element_size = 0.0025,
+                      element_size = 0.01,
                       element_around_circum = 48, 
                       elements_through_thickness = 2)
 
@@ -116,7 +116,7 @@ mesh = pf.Pipe(outer_radius = mesh_info.outer_radius,
                elem_type=("hex", False), 
                element_size = mesh_info.element_size,
                element_around_circum = mesh_info.element_around_circum, 
-               elements_through_thickness = mesh_info.elements_through_thickness)
-               #mesh_refinement=AxialRefinement(0.5,0.0025))
+               elements_through_thickness = mesh_info.elements_through_thickness,
+               mesh_refinement=AxialRefinement(0.5,0.0025))
 
 mesh.export(f'{name}.xdmf')

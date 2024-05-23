@@ -68,7 +68,7 @@ def test_stiffness_matrix():
         'type': 'Straight',
     }
 
-    mesh = pf.Pipe(radius = 70., thickness= 3.0, section_list=[Straight0], elem_type=("hex", False), element_size=6.0, elements_through_thickness=3)
+    mesh = pf.Pipe(70., thickness= 3.0, section_list=[Straight0], elem_type=("hex", False), element_size=6.0, elements_through_thickness=3)
 
     le = pf.LinearElasticity(reduced = False)
 
