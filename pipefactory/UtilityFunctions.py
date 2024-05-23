@@ -129,7 +129,7 @@ def rotate_vector(v: np.array, axis: np.array, angle: float) -> np.array:
     v_rotated = (v * cos_theta +
                  np.cross(axis, v) * sin_theta +
                  axis * np.dot(axis, v) * (1 - cos_theta))
-
+    
     return v_rotated
 
 
