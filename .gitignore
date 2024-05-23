@@ -167,3 +167,4 @@ cython_debug/
 *.xdmf
 *.h5
 *.json
+*.vtk

@@ -50,7 +50,7 @@ class Weld(Defect):
                  Ain : float,
                  ell_out : float,
                  ell_in : float,
-                 radius : float,
+                 outer_radius : float,
                  thickness : float):
         
         self.s0 = s0
@@ -58,7 +58,7 @@ class Weld(Defect):
         self.Ain = Ain
         self.ell_out = ell_out
         self.ell_in = ell_in
-        self.radius = radius
+        self.radius = outer_radius - thickness/2.
         self.thickness = thickness
     
     def __call__(self,
@@ -71,7 +71,6 @@ class Weld(Defect):
         d = cylinder_geodesic_distance(s, 0.0, self.s0, 0.0, np.linalg.norm(node.coords - xm))
 
         alpha = 0.5*(z + 1)
-        print(z)
         ell =  alpha * self.ell_out + (1 - alpha) * self.ell_in 
 
         if ( z >= 0.0 ):
@@ -116,7 +115,7 @@ class Radial_Slit(Defect):
                  phi0 : float,
                  phi1 : float,
                  slit_width : float,
-                 radius : float,
+                 outer_radius : float,
                  thickness: float,
                  partial: bool = False,
                  profile = None):
@@ -128,7 +127,7 @@ class Radial_Slit(Defect):
         self.phi0 = np.deg2rad(phi0)
         self.phi1 = np.deg2rad(phi1)
         self.slit_width = slit_width
-        self.r = radius
+        self.r = outer_radius - thickness/2.
         self.thickness = thickness
         self.partial = partial
         self.profile = profile
