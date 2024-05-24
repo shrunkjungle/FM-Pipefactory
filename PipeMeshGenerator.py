@@ -83,11 +83,11 @@ name = "foo"
 
 mesh_info = PipeParam(outer_radius = 0.0365, 
                       thickness = 0.01, 
-                      element_size = 0.01,
-                      element_around_circum = 48, 
-                      elements_through_thickness = 2)
+                      element_size = 0.1,
+                      element_around_circum = 4, 
+                      elements_through_thickness = 1)
 
-mesh_info.add_straight(2.0)
+mesh_info.add_straight(0.1)
 # mesh_info.add_bend(0.3,[1.0,1.0,0.0])
 
 mesh_info.save_to_json(f'{name}')
@@ -116,7 +116,7 @@ mesh = pf.Pipe(outer_radius = mesh_info.outer_radius,
                elem_type=("hex", False), 
                element_size = mesh_info.element_size,
                element_around_circum = mesh_info.element_around_circum, 
-               elements_through_thickness = mesh_info.elements_through_thickness,
-               mesh_refinement=AxialRefinement(0.5,0.0025))
+               elements_through_thickness = mesh_info.elements_through_thickness)
+            #    mesh_refinement=AxialRefinement(0.5,0.0025))
 
 mesh.export(f'{name}.xdmf')

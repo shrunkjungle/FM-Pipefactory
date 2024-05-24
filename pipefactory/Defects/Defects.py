@@ -179,5 +179,62 @@ class Radial_Slit(Defect):
         else:
             return False
 
+class RadialCrack(Defect):
+
+    def __init__(self,
+                 s0 : float,
+                 phi0 : float,
+                 phi1 : float,
+                 crack_width : float,
+                 crack_depth : float,
+                 outer_radius : float,
+                 thickness: float):
         
+        super().__init__()
+        
+        self.s0 = s0
+
+        self.phi0 = np.deg2rad(phi0)
+        self.phi1 = np.deg2rad(phi1)
+        self.w = crack_width
+        self.d = crack_depth
+        self.r = outer_radius - thickness/2.
+        self.thickness = thickness
+
+        if(self.phi0 > self.phi1):
+            self.dphi = 2.*np.pi - self.phi0 + self.phi1
+        else:
+            self.dphi = self.phi1 - self.phi0
+
+    def closest_idx(self, midline : np.ndarray):
+        crack_mid_idx = np.argmin(np.abs(midline-self.s0))
+        return crack_mid_idx
+    
+    def is_in_crack(self, n : Node):
+        phi = n.phi
+        if np.linalg.norm(n.v) > self.r - self.d:
+            if (self.phi0 > self.phi1): # Goes through the north pole
+                if (phi > self.phi0) and (phi <= 2.0*np.pi):
+                    return True
+                elif (phi < self.phi1) and (phi > 0.0):
+                    return True
+                else:
+                    return False
+            else: # phi1 > phi0
+                if (phi >= self.phi0) and (phi <= self.phi1):
+                    return True
+                else:
+                    return False
+        else:
+            return False
+    
+    def __call__(self, n : Node, N : int):
+
+        factor = (np.linalg.norm(n.v) - self.r + self.d)/ self.d
+
+        if n.global_id >= N:
+            return self.w * factor/2
+        else:
+            return -self.w * factor/2
+
 

@@ -1,4 +1,4 @@
-from pipefactory import Node, Element, find_section, rot_vec, get_orthogonal_inplane, rotate_point_about_point, rotate_triad
+from pipefactory import Node, Element, find_section, rot_vec, get_orthogonal_inplane, rotate_point_about_point, rotate_triad, RadialCrack
 
 import meshio
 import numpy as np
@@ -500,6 +500,38 @@ class Pipe():
 
             if hole_instance(x0 / len(nodes), m_s / len(nodes), e):
                 e.active = False
+
+    def degenerate_crack(self, crack_instance : RadialCrack):
+
+        crack_mid_idx = crack_instance.closest_idx(self.midline)
+
+        crack_idxs = []
+        for n in self.nodes:
+            if n.midline_indx == crack_mid_idx:
+                if crack_instance.is_in_crack(n):
+                    crack_idxs.append(n.global_id)
+
+        from copy import deepcopy
+
+        new_nnodes = self.nnodes-1
+        for i in crack_idxs:
+            new_nnodes += 1
+            degen_node = deepcopy(self.nodes[i])
+            degen_node.global_id = new_nnodes
+            self.nodes.append(degen_node)
+
+        for el_idx, e in enumerate(self.elements):
+            if (e.midline_indx == crack_mid_idx):
+                for crack_idx, id in enumerate(crack_idxs):
+                    if id in e.list_of_nodes:
+                        self.elements[el_idx].list_of_nodes = list(map(lambda x: self.nnodes + crack_idx if x == id else x, self.elements[el_idx].list_of_nodes))
+
+        for i,n in enumerate(self.nodes):
+            if n.midline_indx == crack_mid_idx:
+                if crack_instance.is_in_crack(n):
+                    dr = crack_instance(n, self.nnodes)
+                    self.nodes[i].coords += dr * self.midline_triad[crack_mid_idx][0]
+
 
 
     def partition_pipe(self, nparts, size_overlap):
