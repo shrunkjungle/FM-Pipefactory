@@ -198,7 +198,7 @@ class RadialCrack(Defect):
         self.phi1 = np.deg2rad(phi1)
         self.w = crack_width
         self.d = crack_depth
-        self.r = outer_radius - thickness/2.
+        self.r = outer_radius
         self.thickness = thickness
 
         if(self.phi0 > self.phi1):
