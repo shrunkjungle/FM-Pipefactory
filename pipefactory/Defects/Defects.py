@@ -221,7 +221,7 @@ class RadialCrack(Defect):
                 else:
                     return False
             else: # phi1 > phi0
-                if (phi >= self.phi0) and (phi <= self.phi1):
+                if (phi > self.phi0) and (phi < self.phi1):
                     return True
                 else:
                     return False

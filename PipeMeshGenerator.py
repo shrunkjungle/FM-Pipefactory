@@ -79,15 +79,15 @@ class PipeParam:
 
 ########### Input Parameters #############
 
-name = "foo"
+name = "crack45"
 
 mesh_info = PipeParam(outer_radius = 0.0365, 
                       thickness = 0.01, 
-                      element_size = 0.1,
-                      element_around_circum = 4, 
-                      elements_through_thickness = 1)
+                      element_size = 0.01,
+                      element_around_circum = 48, 
+                      elements_through_thickness = 2)
 
-mesh_info.add_straight(0.1)
+mesh_info.add_straight(2.0)
 # mesh_info.add_bend(0.3,[1.0,1.0,0.0])
 
 mesh_info.save_to_json(f'{name}')
@@ -118,5 +118,7 @@ mesh = pf.Pipe(outer_radius = mesh_info.outer_radius,
                element_around_circum = mesh_info.element_around_circum, 
                elements_through_thickness = mesh_info.elements_through_thickness)
             #    mesh_refinement=AxialRefinement(0.5,0.0025))
+
+mesh.degenerate_crack(pf.RadialCrack(s0=0.5,phi0=0.1,phi1=44.,crack_width=0.001,crack_depth=0.01,outer_radius=0.0365,thickness = 0.01))
 
 mesh.export(f'{name}.xdmf')
