@@ -11,6 +11,7 @@ from .FEM.Loads import CollarLoad
 from .FEM.FEM import FEM
 
 from .Defects.Defects import Hole, Dimple, Radial_Slit, Weld, RadialCrack
+from .Defects.Refinement import AxialRefinement, Ramp
 
 from .Pipe import Pipe
 

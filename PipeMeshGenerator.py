@@ -79,7 +79,7 @@ class PipeParam:
 
 ########### Input Parameters #############
 
-name = "crack45"
+name = "foo"
 
 mesh_info = PipeParam(outer_radius = 0.0365, 
                       thickness = 0.01, 
@@ -92,33 +92,15 @@ mesh_info.add_straight(2.0)
 
 mesh_info.save_to_json(f'{name}')
 
-class AxialRefinement:
-    def __init__(self, distance, new_element_size):
-        self.x = distance
-        self.dx = new_element_size
-
-    def __call__(self, length):
-        return self.ramp(length - self.x)
-
-    def ramp(self, inp, w0=0.05, w1=0.2):
-        x = abs(inp)
-        if x <= w0:
-            return 1.0
-        elif x > w0 and x<w1:
-            return (w1 - x)/(w1-w0)
-        else:
-            return 0.0
-
-
 mesh = pf.Pipe(outer_radius = mesh_info.outer_radius, 
                thickness = mesh_info.thickness, 
                section_list=mesh_info.section_list, 
                elem_type=("hex", False), 
                element_size = mesh_info.element_size,
                element_around_circum = mesh_info.element_around_circum, 
-               elements_through_thickness = mesh_info.elements_through_thickness)
-            #    mesh_refinement=AxialRefinement(0.5,0.0025))
+               elements_through_thickness = mesh_info.elements_through_thickness,
+               mesh_refinement=pf.AxialRefinement(0.5,0.0025, pf.Ramp(0.1,0.3)))
 
-mesh.degenerate_crack(pf.RadialCrack(s0=0.5,phi0=0.1,phi1=44.,crack_width=0.001,crack_depth=0.01,outer_radius=0.0365,thickness = 0.01))
+mesh.degenerate_crack(pf.RadialCrack(s0=0.5,phi0=0.1,phi1=44.,crack_width=0.0,crack_depth=0.01,outer_radius=0.0365,thickness = 0.01))
 
 mesh.export(f'{name}.xdmf')
