@@ -188,53 +188,133 @@ class RadialCrack(Defect):
                  crack_width : float,
                  crack_depth : float,
                  outer_radius : float,
-                 thickness: float):
+                 thickness : float,
+                 smoothing_dist : float,
+                 el_thru_thick : float):
         
         super().__init__()
         
         self.s0 = s0
 
-        self.phi0 = np.deg2rad(phi0)
-        self.phi1 = np.deg2rad(phi1)
+        self.phi0 = np.deg2rad(phi0+0.001) # Ensure there is no issue with rounding due to deg2rad when angle is equal to n.phi in mesh.
+        self.phi1 = np.deg2rad(phi1-0.001) #* Breaks for >~ 360000 el around circum (very unlikely)
         self.w = crack_width
         self.d = crack_depth
         self.r = outer_radius
         self.thickness = thickness
+        self.sd = smoothing_dist
+        self.ett = el_thru_thick
 
         if(self.phi0 > self.phi1):
             self.dphi = 2.*np.pi - self.phi0 + self.phi1
         else:
             self.dphi = self.phi1 - self.phi0
 
-    def closest_idx(self, midline : np.ndarray):
+        self.stepped_depth()
+
+    def affected_idx(self, midline : np.ndarray):
         crack_mid_idx = np.argmin(np.abs(midline-self.s0))
-        return crack_mid_idx
+        all_idx = np.nonzero(np.abs(midline-self.s0)<self.sd)[0].tolist()
+
+        if len(all_idx) == 0:
+            left_idx = []
+            right_idx = []
+        else:
+            left_idx = np.arange(all_idx[0],crack_mid_idx).tolist()
+            right_idx = np.arange(all_idx[-1],crack_mid_idx, -1).tolist()
+
+        return crack_mid_idx, left_idx, right_idx
+    
+    def stepped_depth(self):
+        dx = self.thickness/self.ett
+
+        if self.ett == 1:
+            if self.d > self.thickness:
+                self.degen_cutoff = self.r - self.thickness - dx*0.01
+            else:
+                self.degen_cutoff = self.r - 0.5*dx
+        
+        else:
+            if self.d < 1.5*dx:
+                self.n_above = 0
+                self.n_below = self.ett - 2
+                self.degen_cutoff = self.r - 0.5*dx
+            elif (self.d >= (self.ett-1.5)*dx) and (self.d < self.thickness):
+                self.n_above = self.ett - 2
+                self.n_below = 0
+                self.degen_cutoff = self.r - (self.ett-1.5)*dx
+            elif self.d == self.thickness:
+                self.degen_cutoff = self.r - (self.ett-0.5)*dx
+            elif self.d > self.thickness:
+                self.degen_cutoff = self.r - self.thickness - dx*0.01 # hundreth of an element
+            else:
+                self.n_above = np.floor(self.d/dx+0.5) - 1
+                self.n_below = self.ett - 2 - (np.floor(self.d/dx+0.5) - 1)
+                self.degen_cutoff = self.r - (np.floor(self.d/dx+0.5)-0.5)*dx
+
+            self.apex = self.degen_cutoff - 0.5*dx
+
+        
+    def is_in_wedge(self, n : Node):
+        phi = n.phi
+        if (self.phi0 > self.phi1): # Goes through the north pole
+            if (phi > self.phi0) and (phi <= 2.0*np.pi):
+                return True
+            elif (phi < self.phi1) and (phi > 0.0):
+                return True
+            else:
+                return False
+        else: # phi1 > phi0
+            if (phi > self.phi0) and (phi < self.phi1):
+                return True
+            else:
+                return False
     
     def is_in_crack(self, n : Node):
-        phi = n.phi
-        if np.linalg.norm(n.v) > self.r - self.d:
-            if (self.phi0 > self.phi1): # Goes through the north pole
-                if (phi > self.phi0) and (phi <= 2.0*np.pi):
-                    return True
-                elif (phi < self.phi1) and (phi > 0.0):
-                    return True
-                else:
-                    return False
-            else: # phi1 > phi0
-                if (phi > self.phi0) and (phi < self.phi1):
-                    return True
-                else:
-                    return False
+        if np.linalg.norm(n.v) > self.degen_cutoff:
+            return self.is_in_wedge(n)
         else:
             return False
     
-    def __call__(self, n : Node, N : int):
+    def __call__(self, n : Node, zfactor : float, N : int):
 
-        factor = (np.linalg.norm(n.v) - self.r + self.d)/ self.d
+        dr = 0.
+        dz = 0.
 
-        if n.global_id >= N:
-            return self.w * factor/2
+        if self.d >= self.thickness or self.ett == 1:
+            if self.is_in_crack(n):
+                factor = (np.linalg.norm(n.v) - self.r + self.d)/ self.d
+                if n.global_id >= N:
+                    dz = self.w * factor/2
+                else:
+                    dz = -self.w * factor/2 * zfactor
+        
         else:
-            return -self.w * factor/2
+            dx = self.thickness/self.ett
+            dr0 =  self.r - self.d - self.apex
+            if np.abs(np.linalg.norm(n.v) - self.apex) < dx*0.25:
+                dr = dr0
+            else:
+                for i in range(self.n_above):
+                    if np.abs(np.linalg.norm(n.v) - self.apex-(i+1)*dx) < dx*0.25:
+                        dist_left = self.r - self.apex - dr0
+                        new_dx = dist_left/(self.n_above+1)
+                        dr =  dr0 + (i+1)*(new_dx - dx)
+                for i in range(self.n_below):
+                    if np.abs(np.linalg.norm(n.v) - self.apex+(i+1)*dx) < dx*0.25:
+                        dist_left = self.apex + dr0 - (self.r - self.thickness)
+                        new_dx = dist_left/(self.n_below+1)
+                        dr =  dr0 - (i+1)*(new_dx - dx)
+
+            if self.is_in_crack(n):
+                factor = (np.linalg.norm(n.v) + dr - self.r + self.d)/ self.d
+                if n.global_id >= N:
+                    dz = self.w * factor/2
+                else:
+                    dz = -self.w * factor/2 * zfactor
+
+            dr = dr*np.abs(zfactor)
+
+        return dz, dr
 
 
