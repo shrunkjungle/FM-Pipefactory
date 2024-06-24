@@ -503,7 +503,10 @@ class Pipe():
 
     def degenerate_crack(self, crack_instance : RadialCrack):
 
-        crack_mid_idx = crack_instance.closest_idx(self.midline)
+        crack_mid_idx, left_idx, right_idx = crack_instance.affected_idx(self.midline)
+
+        left_factor = np.linspace(1./(len(left_idx)+1), 1. - 1./(len(left_idx)+1), len(left_idx)).tolist()
+        right_factor = np.linspace(1./(len(right_idx)+1), 1. - 1./(len(right_idx)+1), len(right_idx)).tolist()
 
         crack_idxs = []
         for n in self.nodes:
@@ -527,12 +530,17 @@ class Pipe():
                         self.elements[el_idx].list_of_nodes = list(map(lambda x: self.nnodes + crack_idx if x == id else x, self.elements[el_idx].list_of_nodes))
 
         for i,n in enumerate(self.nodes):
-            if n.midline_indx == crack_mid_idx:
-                if crack_instance.is_in_crack(n):
-                    dr = crack_instance(n, self.nnodes)
-                    self.nodes[i].coords += dr * self.midline_triad[crack_mid_idx][0]
-
-
+            if n.midline_indx in (left_idx+right_idx) or n.midline_indx == crack_mid_idx:
+                if crack_instance.is_in_wedge(n):
+                    if n.midline_indx == crack_mid_idx:
+                        zfactor = 1.
+                    elif n.midline_indx in left_idx:
+                        zfactor = left_factor[left_idx.index(n.midline_indx)]
+                    else:
+                        zfactor = -1 * right_factor[right_idx.index(n.midline_indx)]
+                    
+                    dz, dr = crack_instance(n, zfactor, self.nnodes)
+                    self.nodes[i].coords += dz * self.midline_triad[crack_mid_idx][0] + dr*n.v/np.linalg.norm(n.v)
 
     def partition_pipe(self, nparts, size_overlap):
 
