@@ -529,7 +529,7 @@ class Pipe():
                     if id in e.list_of_nodes:
                         self.elements[el_idx].list_of_nodes = list(map(lambda x: self.nnodes + crack_idx if x == id else x, self.elements[el_idx].list_of_nodes))
 
-        for i,n in enumerate(self.nodes):
+        for n in self.nodes:
             if n.midline_indx in (left_idx+right_idx) or n.midline_indx == crack_mid_idx:
                 if crack_instance.is_in_wedge(n):
                     if n.midline_indx == crack_mid_idx:
@@ -540,7 +540,12 @@ class Pipe():
                         zfactor = -1 * right_factor[right_idx.index(n.midline_indx)]
                     
                     dz, dr = crack_instance(n, zfactor, self.nnodes)
-                    self.nodes[i].coords += dz * self.midline_triad[crack_mid_idx][0] + dr*n.v/np.linalg.norm(n.v)
+
+                    idx = n.midline_indx 
+                    x0 = self.midline_x[idx]
+                    x = n.coords
+
+                    n.coords += dz * self.midline_triad[crack_mid_idx][0] + dr*((x - x0) / np.linalg.norm(x - x0))
 
     def partition_pipe(self, nparts, size_overlap):
 
