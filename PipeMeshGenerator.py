@@ -112,3 +112,5 @@ point_data = {"walltags" : outer_wall_array}
 
 mesh.export(f'{name}.xdmf', point_data = point_data)
 # mesh_info.save_to_json(f'{name}', mesh.midline.tolist())
+
+#test commit
