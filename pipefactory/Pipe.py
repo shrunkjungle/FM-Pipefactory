@@ -54,6 +54,7 @@ class Pipe():
         self.transform(partition, nparts, size_overlap)
 
         self.find_outside_face()
+        self.find_inside_face()
 
 
     def process_section_list(self):
@@ -353,6 +354,13 @@ class Pipe():
         for i, n in enumerate(self.nodes):
             if (np.abs(np.linalg.norm(self.midline_x[n.midline_indx] - n.coords) - (self.radius + 0.5 * self.thickness))) < 1e-4:
                 self.outer_face.append(i)
+
+    def find_inside_face(self):
+
+        self.inner_face = []
+        for i, n in enumerate(self.nodes):
+            if (np.abs(np.linalg.norm(self.midline_x[n.midline_indx] - n.coords) - (self.radius - 0.5 * self.thickness))) < 1e-4:
+                self.inner_face.append(i)
     
     def transform(self, 
                   partition : bool = False,
@@ -709,4 +717,3 @@ class Pipe():
 
         # Alternative with the same options
         meshio.write_points_cells(filename, points, cells, point_data=point_data, cell_data = cell_data)
-
