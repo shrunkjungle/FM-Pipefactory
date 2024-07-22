@@ -80,13 +80,13 @@ class PipeParam:
 
 ########### Input Parameters #############
 
-name = "foo"
+name = "pipe_with_bend_refined"
 
 mesh_info = PipeParam(outer_radius = 0.0365, 
                         thickness = 0.01, 
-                        element_size = 0.01,
-                        element_around_circum = 48, 
-                        elements_through_thickness = 3)
+                        element_size = 0.001,
+                        element_around_circum = 128, 
+                        elements_through_thickness = 8)
 
 mesh_info.add_straight(0.2)
 mesh_info.add_bend(0.2,[0.,1.,0.])
@@ -103,14 +103,15 @@ mesh = pf.Pipe(outer_radius = mesh_info.outer_radius,
 # mesh.degenerate_crack(pf.RadialCrack(s0=0.3,phi0=67.5,phi1=112.5,crack_width=0.005,crack_depth=0.0032, smoothing_dist=0.03001,outer_radius=mesh_info.outer_radius,thickness = mesh_info.thickness, el_thru_thick=mesh_info.elements_through_thickness))
 # mesh.remove_elements(pf.Radial_Slit(s0=0.5005, phi0=67.4, phi1=112.6, slit_width=0.01,outer_radius=0.0365,thickness = 0.01, partial = False))
 
-outer_wall_array = np.zeros(mesh.nnodes)
+#Unused - now store wall data as cell data rather than point data
+"""outer_wall_array = np.zeros(mesh.nnodes)
 
 np.put(outer_wall_array, mesh.outer_face, 1)
 np.put(outer_wall_array, mesh.inner_face, -1)
 
 point_data = {"walltags" : outer_wall_array}
+"""
 
-mesh.export(f'{name}.xdmf', point_data = point_data)
+mesh.export(f'{name}.xdmf')
+#mesh.export_walls(f'{name}_walls.xdmf')
 # mesh_info.save_to_json(f'{name}', mesh.midline.tolist())
-
-#test commit

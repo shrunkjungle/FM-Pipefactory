@@ -46,7 +46,7 @@ class Pipe():
 
         self.midline = self.make_midline(0.0, self.section_ends, element_size, self.higher_order, MR=mesh_refinement)
 
-        self.nodes, self.elements, self.outer_face_elements = self.build()
+        self.nodes, self.elements, self.outer_element_indices, self.inner_element_indices = self.build()
 
         self.nnodes = len(self.nodes)
         self.nel = len(self.elements)
@@ -207,8 +207,10 @@ class Pipe():
         # Build Connectivity
         ie = 0
         elements = []
+        outside_element_indices = []
+        inside_element_indices = []
 
-        i_face_e = 0
+        i_outer_face_e = 0
         outside_face = []
 
         if(self.elem_type == "quad"):
@@ -308,9 +310,14 @@ class Pipe():
                             
                             elements.append(Element(list_of_nodes, "hex8", ie, midline_indx=i))
 
+                            if k == 0:
+                                inside_element_indices.append(ie) #Track indices of cells on inside wall to generate celltags
                             if(k == len(z) - 2):
-                                outside_face.append(Element(list_of_nodes_face, "quad", i_face_e, midline_indx=i))
-                                i_face_e += 1
+                                outside_element_indices.append(ie) #Track indices of cells on outside wall to generate celltags
+
+                                #Currently unused - creates list of quad elements that make up exterior wall
+                                outside_face.append(Element(list_of_nodes_face, "quad", i_outer_face_e, midline_indx=i))
+                                i_outer_face_e += 1
 
                             ie += 1
             
@@ -345,7 +352,7 @@ class Pipe():
             e.midpoint = mid
     
         
-        return nodes, elements, outside_face
+        return nodes, elements, outside_element_indices, inside_element_indices
     
 
     def find_outside_face(self):
@@ -715,5 +722,9 @@ class Pipe():
             (elem_type, connectivity),
         ]
 
+        walltags = np.zeros(self.nel) #cell data
+        walltags[self.outer_element_indices] = 1
+        walltags[self.inner_element_indices] = -1
+
         # Alternative with the same options
-        meshio.write_points_cells(filename, points, cells, point_data=point_data, cell_data = cell_data)
+        meshio.write_points_cells(filename, points, cells, point_data=point_data, cell_data={"walltags": [walltags]})          
