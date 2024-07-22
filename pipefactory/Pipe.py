@@ -725,6 +725,7 @@ class Pipe():
         walltags = np.zeros(self.nel) #cell data
         walltags[self.outer_element_indices] = 1
         walltags[self.inner_element_indices] = -1
-
+        
+        cell_data.update({"walltags": [walltags]})
         # Alternative with the same options
-        meshio.write_points_cells(filename, points, cells, point_data=point_data, cell_data={"walltags": [walltags]})          
+        meshio.write_points_cells(filename, points, cells, point_data=point_data, cell_data=cell_data)          

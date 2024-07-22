@@ -103,7 +103,7 @@ mesh = pf.Pipe(outer_radius = mesh_info.outer_radius,
 # mesh.degenerate_crack(pf.RadialCrack(s0=0.3,phi0=67.5,phi1=112.5,crack_width=0.005,crack_depth=0.0032, smoothing_dist=0.03001,outer_radius=mesh_info.outer_radius,thickness = mesh_info.thickness, el_thru_thick=mesh_info.elements_through_thickness))
 # mesh.remove_elements(pf.Radial_Slit(s0=0.5005, phi0=67.4, phi1=112.6, slit_width=0.01,outer_radius=0.0365,thickness = 0.01, partial = False))
 
-#Unused - now store wall data as cell data rather than point data
+#Unused - now store wall tags as cell data rather than point data, written directly in Pipe.export() function
 """outer_wall_array = np.zeros(mesh.nnodes)
 
 np.put(outer_wall_array, mesh.outer_face, 1)
