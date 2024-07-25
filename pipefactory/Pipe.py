@@ -66,23 +66,23 @@ class Pipe():
 
         self.init_dir = None
 
-        def cleanup_bend_new(Bdict):
-            v1 = Bdict['param']['dir1']
-            v2 = Bdict['param']['dir2']
+        # def cleanup_bend_new(Bdict):
+        #     v1 = Bdict['param']['dir1']
+        #     v2 = Bdict['param']['dir2']
 
-            v1 = v1/np.linalg.norm(v1)
-            v2 = v2/np.linalg.norm(v2)
+        #     v1 = v1/np.linalg.norm(v1)
+        #     v2 = v2/np.linalg.norm(v2)
 
-            angle = np.arccos(np.dot(v1,v2))
+        #     angle = np.arccos(np.dot(v1,v2))
 
-            Bdict['param']['angle'] = angle
-            Bdict['param']['dir1'] = v1
-            Bdict['param']['dir2'] = v2
+        #     Bdict['param']['angle'] = angle
+        #     Bdict['param']['dir1'] = v1
+        #     Bdict['param']['dir2'] = v2
 
-        def cleanup_straight_new(Sdict):
-            v1 = Sdict['dir']
+        # def cleanup_straight_new(Sdict):
+        #     v1 = Sdict['dir']
 
-            Sdict['dir'] = v1/np.linalg.norm(v1)
+        #     Sdict['dir'] = v1/np.linalg.norm(v1)
 
         for idx, s in enumerate(self.section_list):
 
@@ -97,12 +97,12 @@ class Pipe():
             if s['type'].lower() == 'straight':
                 self.length += s['length']
             elif s['type'].lower() == 'straight_new':
-                cleanup_straight_new(self.section_list[idx])
+                # cleanup_straight_new(self.section_list[idx])
                 self.length += s['length']
             elif s['type'].lower() == 'bend':
                 self.length += np.abs(s['param']['radius'] * s['param']['angle'])
             elif s['type'].lower() == 'bend_new':
-                cleanup_bend_new(self.section_list[idx])
+                # cleanup_bend_new(self.section_list[idx])
                 self.length += np.abs(s['param']['radius'] * s['param']['angle'])
             else:
                 raise Exception("Section can only be of type straight or bend.")

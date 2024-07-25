@@ -39,21 +39,27 @@ class PipeParam:
 
     def add_bend(self, radius, direction):
 
+        direction = np.array(direction)/np.linalg.norm(np.array(direction))
+
+        angle = np.arccos(np.dot(np.array(self.current_dir),direction))
+
         b_dict = {'type': 'Bend_new',
                   'param': {'dir1' : np.array(self.current_dir),
                             'dir2' : np.array(direction),
-                            'radius': radius}
+                            'radius': radius,
+                            'angle' : angle}
                             }
         
         bb_dict = {'type': 'Bend',
                    'direction_begin' : self.current_dir,
-                   'direction_end' : direction,
-                   'radius': radius}
+                   'direction_end' : direction.tolist(),
+                   'radius': radius,
+                   'length' : radius*angle}
 
         self.section_list.append(b_dict)
         self.mesh_sections.append(bb_dict)
 
-        self.current_dir = direction
+        self.current_dir = direction.tolist()
 
     def save_to_json(self, name, midline):
 
