@@ -113,14 +113,11 @@ def rotate_vector(v: np.array, axis: np.array, angle: float) -> np.array:
     Parameters:
         v (np.array): The vector to be rotated.
         axis (np.array): The axis of rotation (unit vector).
-        angle (float): The angle of rotation in degrees.
+        angle (float): The angle of rotation in radians.
 
     Returns:
         np.array: The rotated vector.
-    """
-    # Convert angle from degrees to radians
-    angle = np.deg2rad(angle)
-    
+    """ 
     # Calculate cosine and sine of the angle
     cos_theta = np.cos(angle)
     sin_theta = np.sin(angle)
@@ -143,7 +140,7 @@ def rotate_triad(triad: list[np.array],
     Parameters:
         triad (list[np.array]): A list of numpy arrays representing the original triad.
         axis (np.array): The axis of rotation.
-        angle (float): The rotation angle in degrees.
+        angle (float): The rotation angle in radians.
 
     Returns:
         list[np.array]: The rotated triad.
@@ -165,7 +162,7 @@ def rotate_point_about_point(x0: np.array,
     Parameters:
         x0 (np.array): The point to be rotated.
         v (np.array): The rotation axis.
-        angle (float): The rotation angle in degrees.
+        angle (float): The rotation angle in radians.
         p (np.array): The point about which the rotation occurs.
 
     Returns:
@@ -175,8 +172,8 @@ def rotate_point_about_point(x0: np.array,
     translated_point = x0 - p
 
     # Rotate the translated point around axis v
-    cos_theta = np.cos(np.radians(angle))
-    sin_theta = np.sin(np.radians(angle))
+    cos_theta = np.cos(angle)
+    sin_theta = np.sin(angle)
     v_unit = v / np.linalg.norm(v)
     rotation_matrix = np.eye(3) * cos_theta + \
                       np.outer(v_unit, v_unit) * (1 - cos_theta) + \

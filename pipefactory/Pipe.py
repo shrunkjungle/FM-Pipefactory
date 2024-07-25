@@ -75,7 +75,7 @@ class Pipe():
 
             angle = np.arccos(np.dot(v1,v2))
 
-            Bdict['param']['angle'] = np.rad2deg(angle)
+            Bdict['param']['angle'] = angle
             Bdict['param']['dir1'] = v1
             Bdict['param']['dir2'] = v2
 
@@ -100,10 +100,10 @@ class Pipe():
                 cleanup_straight_new(self.section_list[idx])
                 self.length += s['length']
             elif s['type'].lower() == 'bend':
-                self.length += np.abs(s['param']['radius'] * np.deg2rad(s['param']['angle']))
+                self.length += np.abs(s['param']['radius'] * s['param']['angle'])
             elif s['type'].lower() == 'bend_new':
                 cleanup_bend_new(self.section_list[idx])
-                self.length += np.abs(s['param']['radius'] * np.deg2rad(s['param']['angle']))
+                self.length += np.abs(s['param']['radius'] * s['param']['angle'])
             else:
                 raise Exception("Section can only be of type straight or bend.")
             self.section_lengths.append(self.length - self.old_length)
@@ -388,7 +388,7 @@ class Pipe():
                          np.array([0., 1., 0.]), 
                          np.array([0., 0., 1.])]
 
-        init_angle = np.rad2deg(np.arccos(self.init_dir[0])) # np.dot([1,0,0], init_dir)
+        init_angle = np.arccos(self.init_dir[0]) # np.dot([1,0,0], init_dir)
 
         if init_angle > 0.0:
             init_axis = np.cross(np.array([1.,0.,0.]),self.init_dir)
@@ -631,7 +631,7 @@ class Pipe():
 
                 roc = self.section_list[id]['param']['radius']
                 axis, v = self.which_rotation_axis(self.section_list[id]['param']['axis'], id)
-                angle = np.rad2deg(s / roc) * np.sign(self.section_list[id]['param']['angle'])
+                angle = s / roc * np.sign(self.section_list[id]['param']['angle'])
 
                 # Need a point to rotate about
                 p = x0 + np.sign(angle) * roc * v
@@ -642,7 +642,7 @@ class Pipe():
 
                 roc = self.section_list[id]['param']['radius']
                 axis, v = self.which_rotation_axis_new(self.section_list[id]['param']['dir1'],self.section_list[id]['param']['dir2'], id)
-                angle = np.rad2deg(s / roc)
+                angle = s / roc
 
                 # Need a point to rotate about
                 p = x0 + roc * v
