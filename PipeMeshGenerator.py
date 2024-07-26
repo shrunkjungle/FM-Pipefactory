@@ -2,7 +2,6 @@ import numpy as np
 import pipefactory as pf
 
 ########## Pipe Parameter Class ###############
-
 class PipeParam:
     def __init__(self,
                  outer_radius, 
@@ -86,7 +85,7 @@ class PipeParam:
 
 ########### Input Parameters #############
 
-name = "foo"
+name = "ITER_SM10"
 
 mesh_info = PipeParam(outer_radius = 0.0365, 
                       thickness = 0.00305, 
@@ -94,9 +93,15 @@ mesh_info = PipeParam(outer_radius = 0.0365,
                       element_around_circum = 48, 
                       elements_through_thickness = 3)
 
-mesh_info.add_straight(1.6)
-mesh_info.add_bend(1.0, [1.,1.,0.])
-mesh_info.add_straight(1.6)
+mesh_info.add_straight(1.192)
+mesh_info.add_bend(1.0, [1.,0.,-1.])
+mesh_info.add_straight(0.539)
+mesh_info.add_bend(1.0, [1.,0.,0.])
+mesh_info.add_straight(2.023)
+mesh_info.add_bend(1.0, [np.cos(np.deg2rad(23)),0.,-np.sin(np.deg2rad(23))])
+mesh_info.add_straight(0.258)
+mesh_info.add_bend(1.0, [1.,0.,0.])
+mesh_info.add_straight(0.979)
 
 mesh = pf.Pipe(outer_radius = mesh_info.outer_radius, 
                thickness = mesh_info.thickness, 
