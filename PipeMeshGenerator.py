@@ -80,28 +80,40 @@ class PipeParam:
 
 ########### Input Parameters #############
 
-name = "pipe_with_bend_refined"
+   
+name = f"alum_groovy_pipe"
 
-mesh_info = PipeParam(outer_radius = 0.0365, 
-                        thickness = 0.01, 
+mesh_info = PipeParam(outer_radius = 0.0127, 
+                        thickness = 0.0063, 
                         element_size = 0.001,
-                        element_around_circum = 128, 
-                        elements_through_thickness = 8)
+                        element_around_circum = 32, 
+                        elements_through_thickness = 20)
 
-mesh_info.add_straight(0.2)
-mesh_info.add_bend(0.2,[0.,1.,0.])
+mesh_info.add_straight(5.0)
+#mesh_info.add_bend(0.2,[0.,1.,0.])
 
 mesh = pf.Pipe(outer_radius = mesh_info.outer_radius, 
-               thickness = mesh_info.thickness, 
-               section_list=mesh_info.section_list, 
-               elem_type=("hex", False), 
-               element_size = mesh_info.element_size,
-               element_around_circum = mesh_info.element_around_circum, 
-               elements_through_thickness = mesh_info.elements_through_thickness)
+            thickness = mesh_info.thickness, 
+            section_list=mesh_info.section_list, 
+            elem_type=("hex", False), 
+            element_size = mesh_info.element_size,
+            element_around_circum = mesh_info.element_around_circum, 
+            elements_through_thickness = mesh_info.elements_through_thickness)
             #    mesh_refinement=pf.AxialRefinement(0.5,0.0025, pf.Ramp(0.1,0.3)))
 
-# mesh.degenerate_crack(pf.RadialCrack(s0=0.3,phi0=67.5,phi1=112.5,crack_width=0.005,crack_depth=0.0032, smoothing_dist=0.03001,outer_radius=mesh_info.outer_radius,thickness = mesh_info.thickness, el_thru_thick=mesh_info.elements_through_thickness))
-# mesh.remove_elements(pf.Radial_Slit(s0=0.5005, phi0=67.4, phi1=112.6, slit_width=0.01,outer_radius=0.0365,thickness = 0.01, partial = False))
+#mesh.degenerate_crack(pf.RadialCrack(s0=3.5,phi0=0,phi1=361,crack_width=0.002,crack_depth=0.004, smoothing_dist=0.0,outer_radius=mesh_info.outer_radius,thickness = mesh_info.thickness, el_thru_thick=mesh_info.elements_through_thickness))
+def slit_profile(ds_slit, z):
+
+    thickness = 0.0063
+    slit_depth = 0.004
+    depth_ratio = slit_depth/thickness
+    #z ranges from -1 to 1 through the thickness
+    if z < 1 - 2*depth_ratio:
+        return False
+    else:
+        return True
+    
+mesh.remove_elements( pf.Radial_Slit(s0=3.5, phi0=0, phi1=360, slit_width=0.002,outer_radius=mesh_info.outer_radius,thickness = mesh_info.thickness, partial = True, profile=slit_profile))
 
 #Unused - now store wall tags as cell data rather than point data, written directly in Pipe.export() function
 """outer_wall_array = np.zeros(mesh.nnodes)
@@ -112,6 +124,6 @@ np.put(outer_wall_array, mesh.inner_face, -1)
 point_data = {"walltags" : outer_wall_array}
 """
 
-mesh.export(f'{name}.xdmf')
+mesh.export(f'FM-FEM/input_xdmf/{name}.xdmf')
 #mesh.export_walls(f'{name}_walls.xdmf')
-# mesh_info.save_to_json(f'{name}', mesh.midline.tolist())
+mesh_info.save_to_json(f'FM-FEM/input_xdmf/{name}', mesh.midline.tolist())

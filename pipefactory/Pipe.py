@@ -722,10 +722,15 @@ class Pipe():
             (elem_type, connectivity),
         ]
 
+        #tag elements in walls
         walltags = np.zeros(self.nel) #cell data
         walltags[self.outer_element_indices] = 1
         walltags[self.inner_element_indices] = -1
         
+        #remove inactive elements (i.e. for defects)
+        inactive_elems = [e.global_id for e in self.elements if not e.active]
+        walltags = np.delete(walltags, inactive_elems)
+
         cell_data.update({"walltags": [walltags]})
         # Alternative with the same options
         meshio.write_points_cells(filename, points, cells, point_data=point_data, cell_data=cell_data)          
