@@ -579,9 +579,8 @@ class Pipe():
                     self.elements.append(Element(list_of_nodes, "hex8", ie, midline_indx=i+el_mid_idxs[0]))
                     ie += 1
 
-        # create nodes using same structure as before
-        # add new elements using this structure taking care to use existing nodes if necessary.
-
+        self.nnodes = len(self.nodes)
+        self.nel = len(self.elements)
 
 
     def remove_elements(self, hole_instance):
