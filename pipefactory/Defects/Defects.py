@@ -106,6 +106,84 @@ class Hole(Defect):
         else:
             return False
         
+class Cuboid(Defect):
+
+    def __init__(self,
+                 s0 : float,
+                 phi0 : float,
+                 phi1 : float,
+                 length : float,
+                 height : float,
+                 outer_radius : float,
+                 thickness: float,
+                 el_thru_thick : int):
+        
+        super().__init__()
+        
+        self.s0 = s0
+        self.phi0 = np.deg2rad(phi0+0.001) # Ensure there is no issue with rounding due to deg2rad when angle is equal to n.phi in mesh.
+        self.phi1 = np.deg2rad(phi1-0.001) #* Breaks for >~ 360000 el around circum (very unlikely)
+        
+        if(self.phi0 > self.phi1):
+            self.dphi = 2.*np.pi - self.phi0 + self.phi1
+        else:
+            self.dphi = self.phi1 - self.phi0
+
+        self.r = outer_radius
+        self.l = length
+        self.h = height
+        self.thickness = thickness
+        self.ett = el_thru_thick
+
+        self.r_el, self.el_dr = self.elements_deep()
+
+    def elements_deep(self):
+        dx = self.thickness/self.ett
+
+        if self.h < 1.5*dx:
+            r_el = 1
+            el_dr = self.h
+        else:
+            r_el = int(np.floor(self.h/dx+0.5))
+            el_dr = self.h/r_el
+        return r_el, el_dr
+    
+    def where_in_wedge(self,
+                      phi : float):
+        """
+        This function returns the factor through the slit a point is, if it is outside then return "None"
+        """
+        if (self.phi0 > self.phi1): # Goes through the north pole
+            if (phi > self.phi0) and (phi <= 2.0*np.pi):
+                return (phi - self.phi0) / self.dphi
+            elif (phi < self.phi1) and (phi > 0.0):
+                return (2*np.pi - self.phi0 + phi) / self.dphi
+            else:
+                return None
+        else: # phi1 > phi0
+            if (phi >= self.phi0) and (phi <= self.phi1):
+                return (phi - self.phi0) / self.dphi
+            else:
+                return None
+
+    def affected_el_idx(self, midline : np.ndarray):
+        el_midline = np.array([(midline[i]+midline[i+1])*0.5 for i in range(len(midline)-1)])
+        # cuboid_mid_idx = np.argmin(np.abs(el_midline-self.s0))
+        all_idx = np.nonzero(np.abs(el_midline-self.s0)<=self.l/2)[0].tolist()
+        return all_idx
+    
+    def __call__(self, xm : np.array, e : Element):
+        ds_wedge = self.where_in_wedge(e.midpoint_phi)
+        if ds_wedge is not None:
+            if (self.r - np.linalg.norm(e.midpoint - xm)) < self.thickness/self.ett:
+                return True, ds_wedge
+            else:
+                return False, ds_wedge
+        else:
+            return False, ds_wedge
+
+
+    
 
 
 class Radial_Slit(Defect):
@@ -124,8 +202,8 @@ class Radial_Slit(Defect):
         
         self.s0 = s0
 
-        self.phi0 = np.deg2rad(phi0)
-        self.phi1 = np.deg2rad(phi1)
+        self.phi0 = np.deg2rad(phi0+0.001) # Ensure there is no issue with rounding due to deg2rad when angle is equal to n.phi in mesh.
+        self.phi1 = np.deg2rad(phi1-0.001) #* Breaks for >~ 360000 el around circum (very unlikely)
         self.slit_width = slit_width
         self.r = outer_radius - thickness/2.
         self.thickness = thickness
@@ -190,7 +268,7 @@ class RadialCrack(Defect):
                  outer_radius : float,
                  thickness : float,
                  smoothing_dist : float,
-                 el_thru_thick : float):
+                 el_thru_thick : int):
         
         super().__init__()
         

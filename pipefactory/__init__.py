@@ -10,7 +10,7 @@ from .FEM.LinearElastic import LinearElasticity
 from .FEM.Loads import CollarLoad
 from .FEM.FEM import FEM
 
-from .Defects.Defects import Hole, Dimple, Radial_Slit, Weld, RadialCrack
+from .Defects.Defects import Hole, Dimple, Radial_Slit, Weld, RadialCrack, Cuboid
 from .Defects.Refinement import AxialRefinement, Ramp
 
 from .Pipe import Pipe

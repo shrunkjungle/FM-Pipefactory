@@ -1,4 +1,4 @@
-from pipefactory import Node, Element, find_section, rot_vec, get_orthogonal_inplane, rotate_point_about_point, rotate_triad, RadialCrack
+from pipefactory import Node, Element, find_section, rot_vec, get_orthogonal_inplane, rotate_point_about_point, rotate_triad, RadialCrack, Cuboid
 
 import meshio
 import numpy as np
@@ -479,21 +479,134 @@ class Pipe():
                                  self.midline[idx], n)
             n.coords = x0 + (r + dr) * ((x - x0) / np.linalg.norm(x - x0))
 
+    def add_elements(self, cuboid_instance : Cuboid):
+
+        if self.elem_type != "hex":
+            raise Exception("Only Hex elements supported currently.")
+        
+        el_mid_idxs = cuboid_instance.affected_el_idx(self.midline)
+        nx = len(el_mid_idxs)
+
+        nr, dr = cuboid_instance.elements_deep()
+
+        el_factor = []
+        for e in self.elements: # find elements under cuboid
+            if e.midline_indx in el_mid_idxs:
+                nodes = e.list_of_nodes
+                m = np.array([0., 0., 0.])
+                x0 = np.array([0., 0., 0.])
+                for i in nodes:
+                    n = self.nodes[i]
+                    m += n.coords
+                    x0 += self.midline_x[n.midline_indx]
+                
+                n_phi_list = [self.nodes[i].phi for i in nodes]
+                if (np.max(n_phi_list) - np.min(n_phi_list))>np.pi:
+                    def correct_angle(x):
+                        if x < np.pi:
+                            return x+2*np.pi
+                        else:
+                            return x
+                    n_phi_list = list(map(correct_angle, n_phi_list))
+                m_phi = sum(n_phi_list)
+
+                e.midpoint = m / len(nodes)
+                e.midpoint_phi = m_phi / len(nodes)
+
+                if cuboid_instance(x0 / len(nodes), e)[0]:
+                    el_factor.append((e.global_id, cuboid_instance(x0 / len(nodes), e)[1]))
+
+        assert len(el_factor)/nx == float(len(el_factor)//nx) # check divides into
+        nth = int(len(el_factor)/nx)
+
+        for i in range(nx): # sort elements under cuboid based on position
+            a = el_factor[i*nth:(i+1)*nth]
+            a.sort(key = lambda x: x[1])
+            el_factor[i*nth:(i+1)*nth] = [entry[0] for entry in a]
+
+        surface_nodes = []
+        new_ie = 0
+        for i in range(nx):
+            for j in range(nth):
+                surface_nodes.append(self.nodes[self.elements[el_factor[new_ie]].list_of_nodes[4]])
+                if j == nth-1:
+                    surface_nodes.append(self.nodes[self.elements[el_factor[new_ie]].list_of_nodes[7]])
+                new_ie += 1
+
+        new_ie -= nth
+        for j in range(nth):
+            surface_nodes.append(self.nodes[self.elements[el_factor[new_ie]].list_of_nodes[5]])
+            if j == nth-1:
+                surface_nodes.append(self.nodes[self.elements[el_factor[new_ie]].list_of_nodes[6]])
+            new_ie += 1
+
+        from copy import deepcopy
+
+        new_nodes = []
+        nn = self.nnodes
+        k=0
+        nz = (nx+1)*(nth+1)
+
+        for l in range(nr):
+            for i in range(nx+1):
+                for j in range(nth+1):
+                    new_node = deepcopy(surface_nodes[k%nz])
+                    idx = new_node.midline_indx 
+                    x0 = self.midline_x[idx]
+                    x = new_node.coords
+                    new_node.coords += (l+1)*dr*((x - x0) / np.linalg.norm(x - x0))
+                    new_node.global_id = nn + k
+
+                    new_nodes.append(new_node.global_id)
+                    self.nodes.append(new_node)
+
+                    k += 1 # Increment Global Counter
+
+        ie = self.nel
+        cuboid_nodes = [node.global_id for node in surface_nodes]
+        cuboid_nodes = cuboid_nodes + new_nodes
+
+        for k in range(nr): # len(z) -> nr, nz = nsurf
+            for i in range(nx): #ns -> nx
+                for j in range(nth): # nr -> nth
+                    # if j < nth-1:
+                    list_of_new_nodes = [i*(nth+1) + j + k*nz, (i+1)*(nth+1) + j + k*nz, (i+1)*(nth+1)+j+1 + k*nz, i*(nth+1)+j+1 + k*nz,
+                                    i*(nth+1) + j + (k+1)*nz, (i+1)*(nth+1) + j + (k+1)*nz, (i+1)*(nth+1)+j+1 + (k+1)*nz, i*(nth+1)+j+1 + (k+1)*nz]
+                    list_of_nodes = [cuboid_nodes[idx] for idx in list_of_new_nodes]
+                    # else:
+                    #     list_of_nodes = [i*nth + j + k*nz, (i+1)*nth + j + k*nz, (i+1)*nth + k*nz, i*nth + k*nz,
+                    #                     i*nth + j + (k+1)*nz, (i+1)*nth + j + (k+1)*nz, (i+1)*nth + (k+1)*nz, i*nth + (k+1)*nz]
+                    self.elements.append(Element(list_of_nodes, "hex8", ie, midline_indx=i+el_mid_idxs[0]))
+                    ie += 1
+
+        # create nodes using same structure as before
+        # add new elements using this structure taking care to use existing nodes if necessary.
+
+
+
     def remove_elements(self, hole_instance):
 
         for e in self.elements: # loop through all elements
 
             nodes = e.list_of_nodes
-            m_phi = 0.0
             m = np.array([0., 0., 0.])
             m_s = 0.0
             x0 = np.array([0., 0., 0.])
             for i in nodes:
                 n = self.nodes[i]
                 m += n.coords
-                m_phi += n.phi
                 m_s += self.midline[n.midline_indx]
                 x0 += self.midline_x[n.midline_indx]
+
+            n_phi_list = [self.nodes[i].phi for i in nodes]
+            if (np.max(n_phi_list) - np.min(n_phi_list))>np.pi:
+                def correct_angle(x):
+                    if x < np.pi:
+                        return x+2*np.pi
+                    else:
+                        return x
+                n_phi_list = list(map(correct_angle, n_phi_list))
+            m_phi = sum(n_phi_list)
 
             e.midpoint = m / len(nodes)
             e.midpoint_phi = m_phi / len(nodes)
@@ -547,6 +660,8 @@ class Pipe():
 
                     n.coords += dz * self.midline_triad[crack_mid_idx][0] + dr*((x - x0) / np.linalg.norm(x - x0))
 
+        self.nnodes = len(self.nodes)
+
     def partition_pipe(self, nparts, size_overlap):
 
         self.nparts = nparts
@@ -598,10 +713,6 @@ class Pipe():
             for j, elem_list in enumerate(self.p_e):            
                 if e.midline_indx in elem_list:
                     self.Omg[j].append(e.global_id)
-
-
-
-
 
     
     def build_midline(self):
