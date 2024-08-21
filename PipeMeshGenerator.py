@@ -1,12 +1,11 @@
 import numpy as np
 import pipefactory as pf
-from BuildTools import PipeParam, PartitionROM
 
 ########### Input Parameters #############
 
 name = "foo"
 
-mesh_info = PipeParam(outer_radius = 0.0366, 
+mesh_info = pf.PipeParam(outer_radius = 0.0366, 
                       thickness = 0.00305, 
                       element_size = 0.01,
                       element_around_circum = 48, 
