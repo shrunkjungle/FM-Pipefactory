@@ -25,7 +25,7 @@ class Dimple(Defect):
         super().__init__()
         
         self.s0 = s0
-        self.phi0 = np.deg2rad(phi0)
+        self.phi0 = phi0
         self.A = A
         self.ell = ell
 
@@ -91,7 +91,7 @@ class Hole(Defect):
         super().__init__()
         
         self.s0 = s0
-        self.phi0 = np.deg2rad(phi0)
+        self.phi0 = phi0
         self.radius = radius
 
     def __call__(self,
@@ -121,8 +121,8 @@ class Cuboid(Defect):
         super().__init__()
         
         self.s0 = s0
-        self.phi0 = np.deg2rad(phi0+0.001) # Ensure there is no issue with rounding due to deg2rad when angle is equal to n.phi in mesh.
-        self.phi1 = np.deg2rad(phi1-0.001) #* Breaks for >~ 360000 el around circum (very unlikely)
+        self.phi0 = phi0+1.e-5 # Ensure there is no issue with rounding due to deg2rad when angle is equal to n.phi in mesh.
+        self.phi1 = phi1-1.e-5 #* Breaks for >~ 360000 el around circum (very unlikely)
         
         if(self.phi0 > self.phi1):
             self.dphi = 2.*np.pi - self.phi0 + self.phi1
@@ -202,8 +202,8 @@ class Radial_Slit(Defect):
         
         self.s0 = s0
 
-        self.phi0 = np.deg2rad(phi0+0.001) # Ensure there is no issue with rounding due to deg2rad when angle is equal to n.phi in mesh.
-        self.phi1 = np.deg2rad(phi1-0.001) #* Breaks for >~ 360000 el around circum (very unlikely)
+        self.phi0 = phi0+1.e-5 # Ensure there is no issue with rounding due to deg2rad when angle is equal to n.phi in mesh.
+        self.phi1 = phi1-1.e-5 #* Breaks for >~ 360000 el around circum (very unlikely)
         self.slit_width = slit_width
         self.r = outer_radius - thickness/2.
         self.thickness = thickness
@@ -274,8 +274,8 @@ class RadialCrack(Defect):
         
         self.s0 = s0
 
-        self.phi0 = np.deg2rad(phi0+0.001) # Ensure there is no issue with rounding due to deg2rad when angle is equal to n.phi in mesh.
-        self.phi1 = np.deg2rad(phi1-0.001) #* Breaks for >~ 360000 el around circum (very unlikely)
+        self.phi0 = phi0+1.e-5 # Ensure there is no issue with rounding due to deg2rad when angle is equal to n.phi in mesh.
+        self.phi1 = phi1-1.e-5 #* Breaks for >~ 360000 el around circum (very unlikely)
         self.w = crack_width
         self.d = crack_depth
         self.r = outer_radius

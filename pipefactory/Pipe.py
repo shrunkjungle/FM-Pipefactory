@@ -489,6 +489,12 @@ class Pipe():
 
         nr, dr = cuboid_instance.elements_deep()
 
+        def correct_angle(x):
+            if x < np.pi:
+                return x+2*np.pi
+            else:
+                return x
+
         el_factor = []
         for e in self.elements: # find elements under cuboid
             if e.midline_indx in el_mid_idxs:
@@ -502,11 +508,6 @@ class Pipe():
                 
                 n_phi_list = [self.nodes[i].phi for i in nodes]
                 if (np.max(n_phi_list) - np.min(n_phi_list))>np.pi:
-                    def correct_angle(x):
-                        if x < np.pi:
-                            return x+2*np.pi
-                        else:
-                            return x
                     n_phi_list = list(map(correct_angle, n_phi_list))
                 m_phi = sum(n_phi_list)
 
@@ -566,16 +567,13 @@ class Pipe():
         cuboid_nodes = [node.global_id for node in surface_nodes]
         cuboid_nodes = cuboid_nodes + new_nodes
 
-        for k in range(nr): # len(z) -> nr, nz = nsurf
-            for i in range(nx): #ns -> nx
-                for j in range(nth): # nr -> nth
-                    # if j < nth-1:
+        for k in range(nr): 
+            for i in range(nx): 
+                for j in range(nth): 
                     list_of_new_nodes = [i*(nth+1) + j + k*nz, (i+1)*(nth+1) + j + k*nz, (i+1)*(nth+1)+j+1 + k*nz, i*(nth+1)+j+1 + k*nz,
                                     i*(nth+1) + j + (k+1)*nz, (i+1)*(nth+1) + j + (k+1)*nz, (i+1)*(nth+1)+j+1 + (k+1)*nz, i*(nth+1)+j+1 + (k+1)*nz]
                     list_of_nodes = [cuboid_nodes[idx] for idx in list_of_new_nodes]
-                    # else:
-                    #     list_of_nodes = [i*nth + j + k*nz, (i+1)*nth + j + k*nz, (i+1)*nth + k*nz, i*nth + k*nz,
-                    #                     i*nth + j + (k+1)*nz, (i+1)*nth + j + (k+1)*nz, (i+1)*nth + (k+1)*nz, i*nth + (k+1)*nz]
+
                     self.elements.append(Element(list_of_nodes, "hex8", ie, midline_indx=i+el_mid_idxs[0]))
                     ie += 1
 
