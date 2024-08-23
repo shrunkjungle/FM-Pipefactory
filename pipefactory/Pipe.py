@@ -19,7 +19,8 @@ class Pipe():
                  partition: bool = False,
                  nparts: int = None,
                  size_overlap: int = None,
-                 mesh_refinement = None):
+                 mesh_refinement = None,
+                 thermal_expansion_opt = None):
     
 
         self.section_list = section_list
@@ -45,6 +46,9 @@ class Pipe():
         self.higher_order = elem_type[1]
 
         self.midline = self.make_midline(0.0, self.section_ends, element_size, self.higher_order, MR=mesh_refinement)
+
+        if thermal_expansion_opt:
+            self.thermal_expansion_on_midline(thermal_expansion_opt)
 
         self.nodes, self.elements, self.outer_element_indices, self.inner_element_indices = self.build()
 
@@ -131,6 +135,8 @@ class Pipe():
                                     represents the end point of a section, starting from the given start point.
         element_size (float): The distance between each point in a section.
         higher_order (bool): If the mesh is higher order then we need to make more points.
+        MR (AxialRefinement): Defines regions to be refined and ramp function to use.
+
 
         Returns:
         np.array: A NumPy array of type np.float64 containing the midline points. Each point is spaced at 
@@ -165,6 +171,33 @@ class Pipe():
             start = end
 
         return np.array(midline, dtype=np.float64)
+    
+    def thermal_expansion_on_midline(self, thermal_expansion_opt):
+        """
+        Performs thermal expansion simulation by altering the distance between midline points according to 
+        provided heat distribution and linear thermal expansion coefficient
+
+        Parameters:
+        thermal_expansion_opt ({"distribution": function, "lin_exp_coeff": float, "ambient_temp": float}): 
+            Options for simulating thermal expansion along the midline - req'd: a distribution and linear thermal
+            expansion coefficient.
+            distribution: function of arc length along midline
+            lin_exp_coeff: linear expansion coefficient for pipe material
+            ambient_temp: baseline temperature i.e. no expansion
+        """
+
+        temp_dist = thermal_expansion_opt["distribution"]
+        alpha = thermal_expansion_opt["lin_exp_coeff"]
+        T0 = thermal_expansion_opt["ambient_temp"]
+
+        section_end_indices = np.flatnonzero(np.isin(self.midline, self.section_ends))
+        print(section_end_indices)
+
+        for i in range(1,len(self.midline)):
+            L = self.midline[i] - self.midline[i-1]
+            self.midline[i:] += L * alpha * (temp_dist((self.midline[i] + 0.5*L) - T0))
+
+        self.section_ends = self.midline[section_end_indices]
 
     def build(self):
         
@@ -387,7 +420,7 @@ class Pipe():
         """
             This function assigns each point on the midline to a section, using the utility function find_section()
 
-            It takes no inputs or returns nothing. It updates each update each "node" with the index of the section.
+            It takes no inputs and returns nothing. It updates each update each "node" with the index of the section.
         """
         self.midline_to_section = []
         for si in self.midline:
@@ -727,7 +760,7 @@ class Pipe():
         walltags[self.outer_element_indices] = 1
         walltags[self.inner_element_indices] = -1
         
-        #remove inactive elements (i.e. for defects)
+        #remove inactive elements (e.g. for defects)
         inactive_elems = [e.global_id for e in self.elements if not e.active]
         walltags = np.delete(walltags, inactive_elems)
 
