@@ -47,7 +47,7 @@ class Pipe():
 
         self.midline = self.make_midline(0.0, self.section_ends, element_size, self.higher_order, MR=mesh_refinement)
 
-        if thermal_expansion_opt:
+        if thermal_expansion_opt is not None:
             self.thermal_expansion_on_midline(thermal_expansion_opt)
 
         self.nodes, self.elements, self.outer_element_indices, self.inner_element_indices = self.build()
@@ -70,24 +70,6 @@ class Pipe():
         self.section_lengths = []
 
         self.init_dir = None
-
-        # def cleanup_bend_new(Bdict):
-        #     v1 = Bdict['param']['dir1']
-        #     v2 = Bdict['param']['dir2']
-
-        #     v1 = v1/np.linalg.norm(v1)
-        #     v2 = v2/np.linalg.norm(v2)
-
-        #     angle = np.arccos(np.dot(v1,v2))
-
-        #     Bdict['param']['angle'] = angle
-        #     Bdict['param']['dir1'] = v1
-        #     Bdict['param']['dir2'] = v2
-
-        # def cleanup_straight_new(Sdict):
-        #     v1 = Sdict['dir']
-
-        #     Sdict['dir'] = v1/np.linalg.norm(v1)
 
         for idx, s in enumerate(self.section_list):
 
