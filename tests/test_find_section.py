@@ -1,5 +1,5 @@
 import pytest
-from pipefactory import find_section  # Replace 'your_module' with the actual name of your module
+from ..pipefactory import find_section  # Replace 'your_module' with the actual name of your module
 
 @pytest.mark.parametrize("section_ends, x, expected", [
     ([1, 2, 3], 0.5, 0),   # x before first section end

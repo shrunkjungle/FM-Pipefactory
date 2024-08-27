@@ -1,4 +1,4 @@
-from pipefactory import Element, Node, cylinder_geodesic_distance
+from ...pipefactory import Element, Node, cylinder_geodesic_distance
 import numpy as np
 
 class Defect():
