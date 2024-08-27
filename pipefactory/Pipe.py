@@ -19,7 +19,8 @@ class Pipe():
                  partition: bool = False,
                  nparts: int = None,
                  size_overlap: int = None,
-                 mesh_refinement = None):
+                 mesh_refinement = None,
+                 thermal_expansion_opt = None):
     
 
         self.section_list = section_list
@@ -46,7 +47,10 @@ class Pipe():
 
         self.midline = self.make_midline(0.0, self.section_ends, element_size, self.higher_order, MR=mesh_refinement)
 
-        self.nodes, self.elements, self.outer_face_elements = self.build()
+        if thermal_expansion_opt is not None:
+            self.thermal_expansion_on_midline(thermal_expansion_opt)
+
+        self.nodes, self.elements, self.outer_element_indices, self.inner_element_indices = self.build()
 
         self.nnodes = len(self.nodes)
         self.nel = len(self.elements)
@@ -54,6 +58,7 @@ class Pipe():
         self.transform(partition, nparts, size_overlap)
 
         self.find_outside_face()
+        self.find_inside_face()
 
 
     def process_section_list(self):
@@ -65,24 +70,6 @@ class Pipe():
         self.section_lengths = []
 
         self.init_dir = None
-
-        # def cleanup_bend_new(Bdict):
-        #     v1 = Bdict['param']['dir1']
-        #     v2 = Bdict['param']['dir2']
-
-        #     v1 = v1/np.linalg.norm(v1)
-        #     v2 = v2/np.linalg.norm(v2)
-
-        #     angle = np.arccos(np.dot(v1,v2))
-
-        #     Bdict['param']['angle'] = angle
-        #     Bdict['param']['dir1'] = v1
-        #     Bdict['param']['dir2'] = v2
-
-        # def cleanup_straight_new(Sdict):
-        #     v1 = Sdict['dir']
-
-        #     Sdict['dir'] = v1/np.linalg.norm(v1)
 
         for idx, s in enumerate(self.section_list):
 
@@ -130,6 +117,8 @@ class Pipe():
                                     represents the end point of a section, starting from the given start point.
         element_size (float): The distance between each point in a section.
         higher_order (bool): If the mesh is higher order then we need to make more points.
+        MR (AxialRefinement): Defines regions to be refined and ramp function to use.
+
 
         Returns:
         np.array: A NumPy array of type np.float64 containing the midline points. Each point is spaced at 
@@ -164,6 +153,33 @@ class Pipe():
             start = end
 
         return np.array(midline, dtype=np.float64)
+    
+    def thermal_expansion_on_midline(self, thermal_expansion_opt):
+        """
+        Performs thermal expansion simulation by altering the distance between midline points according to 
+        provided heat distribution and linear thermal expansion coefficient
+
+        Parameters:
+        thermal_expansion_opt ({"distribution": function, "lin_exp_coeff": float, "ambient_temp": float}): 
+            Options for simulating thermal expansion along the midline - req'd: a distribution and linear thermal
+            expansion coefficient.
+            distribution: function of arc length along midline
+            lin_exp_coeff: linear expansion coefficient for pipe material
+            ambient_temp: baseline temperature i.e. no expansion
+        """
+
+        temp_dist = thermal_expansion_opt["distribution"]
+        alpha = thermal_expansion_opt["lin_exp_coeff"]
+        T0 = thermal_expansion_opt["ambient_temp"]
+
+        section_end_indices = np.flatnonzero(np.isin(self.midline, self.section_ends))
+        print(section_end_indices)
+
+        for i in range(1,len(self.midline)):
+            L = self.midline[i] - self.midline[i-1]
+            self.midline[i:] += L * alpha * (temp_dist((self.midline[i] + 0.5*L) - T0))
+
+        self.section_ends = self.midline[section_end_indices]
 
     def build(self):
         
@@ -206,8 +222,10 @@ class Pipe():
         # Build Connectivity
         ie = 0
         elements = []
+        outside_element_indices = []
+        inside_element_indices = []
 
-        i_face_e = 0
+        i_outer_face_e = 0
         outside_face = []
 
         if(self.elem_type == "quad"):
@@ -307,9 +325,14 @@ class Pipe():
                             
                             elements.append(Element(list_of_nodes, "hex8", ie, midline_indx=i))
 
+                            if k == 0:
+                                inside_element_indices.append(ie) #Track indices of cells on inside wall to generate celltags
                             if(k == len(z) - 2):
-                                outside_face.append(Element(list_of_nodes_face, "quad", i_face_e, midline_indx=i))
-                                i_face_e += 1
+                                outside_element_indices.append(ie) #Track indices of cells on outside wall to generate celltags
+
+                                #Currently unused - creates list of quad elements that make up exterior wall
+                                outside_face.append(Element(list_of_nodes_face, "quad", i_outer_face_e, midline_indx=i))
+                                i_outer_face_e += 1
 
                             ie += 1
             
@@ -344,7 +367,7 @@ class Pipe():
             e.midpoint = mid
     
         
-        return nodes, elements, outside_face
+        return nodes, elements, outside_element_indices, inside_element_indices
     
 
     def find_outside_face(self):
@@ -353,6 +376,13 @@ class Pipe():
         for i, n in enumerate(self.nodes):
             if (np.abs(np.linalg.norm(self.midline_x[n.midline_indx] - n.coords) - (self.radius + 0.5 * self.thickness))) < 1e-4:
                 self.outer_face.append(i)
+
+    def find_inside_face(self):
+
+        self.inner_face = []
+        for i, n in enumerate(self.nodes):
+            if (np.abs(np.linalg.norm(self.midline_x[n.midline_indx] - n.coords) - (self.radius - 0.5 * self.thickness))) < 1e-4:
+                self.inner_face.append(i)
     
     def transform(self, 
                   partition : bool = False,
@@ -372,7 +402,7 @@ class Pipe():
         """
             This function assigns each point on the midline to a section, using the utility function find_section()
 
-            It takes no inputs or returns nothing. It updates each update each "node" with the index of the section.
+            It takes no inputs and returns nothing. It updates each update each "node" with the index of the section.
         """
         self.midline_to_section = []
         for si in self.midline:
@@ -815,6 +845,15 @@ class Pipe():
             (elem_type, connectivity),
         ]
 
-        # Alternative with the same options
-        meshio.write_points_cells(filename, points, cells, point_data=point_data, cell_data = cell_data)
+        #tag elements in walls
+        walltags = np.zeros(self.nel) #cell data
+        walltags[self.outer_element_indices] = 1
+        walltags[self.inner_element_indices] = -1
+        
+        #remove inactive elements (e.g. for defects)
+        inactive_elems = [e.global_id for e in self.elements if not e.active]
+        walltags = np.delete(walltags, inactive_elems)
 
+        cell_data.update({"walltags": [walltags]})
+        # Alternative with the same options
+        meshio.write_points_cells(filename, points, cells, point_data=point_data, cell_data=cell_data)          
