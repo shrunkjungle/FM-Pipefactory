@@ -24,10 +24,11 @@ class Pipe():
     
 
         self.section_list = section_list
+        self.outer_radius = outer_radius
         self.thickness = thickness
         self.element_size = element_size
         self.element_around_circum = element_around_circum
-        self.elements_through_thickness = elements_through_thickness
+        self.ett = elements_through_thickness
 
         self.v = {
         "z": np.array([0.0, 0.0, 1.0]),
@@ -84,12 +85,10 @@ class Pipe():
             if s['type'].lower() == 'straight':
                 self.length += s['length']
             elif s['type'].lower() == 'straight_new':
-                # cleanup_straight_new(self.section_list[idx])
                 self.length += s['length']
             elif s['type'].lower() == 'bend':
                 self.length += np.abs(s['param']['radius'] * s['param']['angle'])
             elif s['type'].lower() == 'bend_new':
-                # cleanup_bend_new(self.section_list[idx])
                 self.length += np.abs(s['param']['radius'] * s['param']['angle'])
             else:
                 raise Exception("Section can only be of type straight or bend.")
@@ -201,9 +200,9 @@ class Pipe():
 
         if (self.elem_type == "hex"):
             if self.higher_order:
-                z = np.linspace(-0.5*self.thickness, 0.5*self.thickness, 2 * self.elements_through_thickness + 1).tolist()
+                z = np.linspace(-0.5*self.thickness, 0.5*self.thickness, 2 * self.ett + 1).tolist()
             else:
-                z = np.linspace(-0.5*self.thickness, 0.5*self.thickness, self.elements_through_thickness + 1).tolist()
+                z = np.linspace(-0.5*self.thickness, 0.5*self.thickness, self.ett + 1).tolist()
         else:
             z = [0.0]
 
@@ -500,6 +499,8 @@ class Pipe():
     
     def add_defect_displacement(self, defect_instance):
 
+        defect_instance.read_mesh_param(self.outer_radius, self.thickness, self.ett)
+
         for n in self.nodes: # loop through nodes 
             idx = n.midline_indx 
             x0 = self.midline_x[idx]
@@ -510,6 +511,9 @@ class Pipe():
             n.coords = x0 + (r + dr) * ((x - x0) / np.linalg.norm(x - x0))
 
     def add_elements(self, cuboid_instance : Cuboid):
+
+        cuboid_instance.read_mesh_param(self.outer_radius, self.thickness, self.ett)
+        cuboid_instance.elements_deep()
 
         if self.elem_type != "hex":
             raise Exception("Only Hex elements supported currently.")
@@ -613,6 +617,8 @@ class Pipe():
 
     def remove_elements(self, hole_instance):
 
+        hole_instance.read_mesh_param(self.outer_radius, self.thickness, self.ett)
+
         for e in self.elements: # loop through all elements
 
             nodes = e.list_of_nodes
@@ -642,6 +648,9 @@ class Pipe():
                 e.active = False
 
     def degenerate_crack(self, crack_instance : RadialCrack):
+
+        crack_instance.read_mesh_param(self.outer_radius, self.thickness, self.ett)
+        crack_instance.stepped_depth()
 
         crack_mid_idx, left_idx, right_idx = crack_instance.affected_idx(self.midline)
 

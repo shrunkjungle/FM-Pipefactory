@@ -6,12 +6,13 @@ class Defect():
         Defect represents the base class for a defect, defining the API which must be implemented.
     """
     def __init__(self):
+        pass
 
-        return NotImplementedError
-    
-    def __call__(self):
-
-        return NotImplementedError
+    def read_mesh_param(self, outer_radius, thickness, ett):
+        self.outer_radius = outer_radius
+        self.thickness = thickness
+        self.ett = ett
+        self.radius = outer_radius - thickness/2
 
 
 class Dimple(Defect):
@@ -49,17 +50,19 @@ class Weld(Defect):
                  Aout :  float, 
                  Ain : float,
                  ell_out : float,
-                 ell_in : float,
-                 outer_radius : float,
-                 thickness : float):
+                 ell_in : float):
+                #  outer_radius : float,
+                #  thickness : float):
+        
+        super().__init__()
         
         self.s0 = s0
         self.Aout = Aout
         self.Ain = Ain
         self.ell_out = ell_out
         self.ell_in = ell_in
-        self.radius = outer_radius - thickness/2.
-        self.thickness = thickness
+        # self.radius = outer_radius - thickness/2.
+        # self.thickness = thickness
     
     def __call__(self,
                  xm: np.array,
@@ -92,7 +95,7 @@ class Hole(Defect):
         
         self.s0 = s0
         self.phi0 = phi0
-        self.radius = radius
+        self.hole_radius = radius
 
     def __call__(self,
                  xm : np.array,
@@ -101,7 +104,7 @@ class Hole(Defect):
     
         d = cylinder_geodesic_distance(s, e.midpoint_phi, self.s0, self.phi0, np.linalg.norm(e.midpoint - xm))
 
-        if (d  < self.radius):
+        if (d  < self.hole_radius):
             return True
         else:
             return False
@@ -113,10 +116,10 @@ class Cuboid(Defect):
                  phi0 : float,
                  phi1 : float,
                  length : float,
-                 height : float,
-                 outer_radius : float,
-                 thickness: float,
-                 el_thru_thick : int):
+                 height : float):
+                #  outer_radius : float,
+                #  thickness: float,
+                #  el_thru_thick : int):
         
         super().__init__()
         
@@ -129,11 +132,11 @@ class Cuboid(Defect):
         else:
             self.dphi = self.phi1 - self.phi0
 
-        self.r = outer_radius
+        # self.outer_radius = outer_radius
         self.l = length
         self.h = height
-        self.thickness = thickness
-        self.ett = el_thru_thick
+        # self.thickness = thickness
+        # self.ett = el_thru_thick
 
         self.r_el, self.el_dr = self.elements_deep()
 
@@ -146,7 +149,7 @@ class Cuboid(Defect):
         else:
             r_el = int(np.floor(self.h/dx+0.5))
             el_dr = self.h/r_el
-        return r_el, el_dr
+        self.r_el, self.el_dr = r_el, el_dr
     
     def where_in_wedge(self,
                       phi : float):
@@ -175,7 +178,7 @@ class Cuboid(Defect):
     def __call__(self, xm : np.array, e : Element):
         ds_wedge = self.where_in_wedge(e.midpoint_phi)
         if ds_wedge is not None:
-            if (self.r - np.linalg.norm(e.midpoint - xm)) < self.thickness/self.ett:
+            if (self.outer_radius - np.linalg.norm(e.midpoint - xm)) < self.thickness/self.ett:
                 return True, ds_wedge
             else:
                 return False, ds_wedge
@@ -193,8 +196,8 @@ class Radial_Slit(Defect):
                  phi0 : float,
                  phi1 : float,
                  slit_width : float,
-                 outer_radius : float,
-                 thickness: float,
+                #  outer_radius : float,
+                #  thickness: float,
                  partial: bool = False,
                  profile = None):
         
@@ -205,8 +208,8 @@ class Radial_Slit(Defect):
         self.phi0 = phi0+1.e-5 # Ensure there is no issue with rounding due to deg2rad when angle is equal to n.phi in mesh.
         self.phi1 = phi1-1.e-5 #* Breaks for >~ 360000 el around circum (very unlikely)
         self.slit_width = slit_width
-        self.r = outer_radius - thickness/2.
-        self.thickness = thickness
+        # self.radius = outer_radius - thickness/2.
+        # self.thickness = thickness
         self.partial = partial
         self.profile = profile
 
@@ -249,7 +252,7 @@ class Radial_Slit(Defect):
         
         if (np.abs(s - self.s0) < 0.5 * self.slit_width) and (ds_slit is not None): # Is the distance to the slit less than half the slit_width.
             if(self.partial) and (self.profile is not None):
-                z = 2. * (np.linalg.norm(e.midpoint - xm) - self.r) / self.thickness
+                z = 2. * (np.linalg.norm(e.midpoint - xm) - self.radius) / self.thickness
             
                 return self.profile(ds_slit, z)
             else:
@@ -265,10 +268,10 @@ class RadialCrack(Defect):
                  phi1 : float,
                  crack_width : float,
                  crack_depth : float,
-                 outer_radius : float,
-                 thickness : float,
-                 smoothing_dist : float,
-                 el_thru_thick : int):
+                #  outer_radius : float,
+                #  thickness : float,
+                 smoothing_dist : float):
+                #  el_thru_thick : int):
         
         super().__init__()
         
@@ -278,17 +281,17 @@ class RadialCrack(Defect):
         self.phi1 = phi1-1.e-5 #* Breaks for >~ 360000 el around circum (very unlikely)
         self.w = crack_width
         self.d = crack_depth
-        self.r = outer_radius
-        self.thickness = thickness
+        # self.outer_radius = outer_radius
+        # self.thickness = thickness
         self.sd = smoothing_dist
-        self.ett = el_thru_thick
+        # self.ett = el_thru_thick
 
         if(self.phi0 > self.phi1):
             self.dphi = 2.*np.pi - self.phi0 + self.phi1
         else:
             self.dphi = self.phi1 - self.phi0
 
-        self.stepped_depth()
+        # self.stepped_depth()
 
     def affected_idx(self, midline : np.ndarray):
         crack_mid_idx = np.argmin(np.abs(midline-self.s0))
@@ -308,27 +311,27 @@ class RadialCrack(Defect):
 
         if self.ett == 1:
             if self.d > self.thickness:
-                self.degen_cutoff = self.r - self.thickness - dx*0.01
+                self.degen_cutoff = self.outer_radius - self.thickness - dx*0.01
             else:
-                self.degen_cutoff = self.r - 0.5*dx
+                self.degen_cutoff = self.outer_radius - 0.5*dx
         
         else:
             if self.d < 1.5*dx:
                 self.n_above = 0
                 self.n_below = self.ett - 2
-                self.degen_cutoff = self.r - 0.5*dx
+                self.degen_cutoff = self.outer_radius - 0.5*dx
             elif (self.d >= (self.ett-1.5)*dx) and (self.d < self.thickness):
                 self.n_above = self.ett - 2
                 self.n_below = 0
-                self.degen_cutoff = self.r - (self.ett-1.5)*dx
+                self.degen_cutoff = self.outer_radius - (self.ett-1.5)*dx
             elif self.d == self.thickness:
-                self.degen_cutoff = self.r - (self.ett-0.5)*dx
+                self.degen_cutoff = self.outer_radius - (self.ett-0.5)*dx
             elif self.d > self.thickness:
-                self.degen_cutoff = self.r - self.thickness - dx*0.01 # hundreth of an element
+                self.degen_cutoff = self.outer_radius - self.thickness - dx*0.01 # hundreth of an element
             else:
                 self.n_above = np.floor(self.d/dx+0.5) - 1
                 self.n_below = self.ett - 2 - (np.floor(self.d/dx+0.5) - 1)
-                self.degen_cutoff = self.r - (np.floor(self.d/dx+0.5)-0.5)*dx
+                self.degen_cutoff = self.outer_radius - (np.floor(self.d/dx+0.5)-0.5)*dx
 
             self.apex = self.degen_cutoff - 0.5*dx
 
@@ -361,7 +364,7 @@ class RadialCrack(Defect):
 
         if self.d >= self.thickness or self.ett == 1:
             if self.is_in_crack(n):
-                factor = (np.linalg.norm(n.v) - self.r + self.d)/ self.d
+                factor = (np.linalg.norm(n.v) - self.outer_radius + self.d)/ self.d
                 if n.global_id >= N:
                     dz = self.w * factor/2
                 else:
@@ -369,23 +372,23 @@ class RadialCrack(Defect):
         
         else:
             dx = self.thickness/self.ett
-            dr0 =  self.r - self.d - self.apex
+            dr0 =  self.outer_radius - self.d - self.apex
             if np.abs(np.linalg.norm(n.v) - self.apex) < dx*0.25:
                 dr = dr0
             else:
                 for i in range(self.n_above):
                     if np.abs(np.linalg.norm(n.v) - self.apex-(i+1)*dx) < dx*0.25:
-                        dist_left = self.r - self.apex - dr0
+                        dist_left = self.outer_radius - self.apex - dr0
                         new_dx = dist_left/(self.n_above+1)
                         dr =  dr0 + (i+1)*(new_dx - dx)
                 for i in range(self.n_below):
                     if np.abs(np.linalg.norm(n.v) - self.apex+(i+1)*dx) < dx*0.25:
-                        dist_left = self.apex + dr0 - (self.r - self.thickness)
+                        dist_left = self.apex + dr0 - (self.outer_radius - self.thickness)
                         new_dx = dist_left/(self.n_below+1)
                         dr =  dr0 - (i+1)*(new_dx - dx)
 
             if self.is_in_crack(n):
-                factor = (np.linalg.norm(n.v) + dr - self.r + self.d)/ self.d
+                factor = (np.linalg.norm(n.v) + dr - self.outer_radius + self.d)/ self.d
                 if n.global_id >= N:
                     dz = self.w * factor/2
                 else:
