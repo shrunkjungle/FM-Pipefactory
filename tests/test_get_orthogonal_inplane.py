@@ -1,6 +1,6 @@
 import numpy as np
 import pytest
-from pipefactory import get_orthogonal_inplane
+from ..pipefactory import get_orthogonal_inplane
 
 def test_orthogonal_vector_xy_plane():
     d = np.array([1, 0, 0])

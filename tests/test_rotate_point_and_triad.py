@@ -1,6 +1,6 @@
 import numpy as np
 
-from pipefactory import rotate_point_about_point, rotate_triad
+from ..pipefactory import rotate_point_about_point, rotate_triad
 
 def test_rotate_point_and_triad():
     # Define the original triad

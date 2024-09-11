@@ -1,6 +1,6 @@
 import numpy as np
 import pytest as py
-from pipefactory import rot_vec
+from ..pipefactory import rot_vec
 
 def test_rotation_90_degrees():
     vec = np.array([1, 0, 0])

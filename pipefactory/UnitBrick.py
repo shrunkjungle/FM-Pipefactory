@@ -1,5 +1,5 @@
 import numpy as np
-import pipefactory as pf
+from ..pipefactory import Node, Element
 
 import meshio
 
@@ -21,11 +21,11 @@ class UnitBrick:
         x.append([0.0, 1.0, 1.0])
 
         for i, xi in enumerate(x):
-            self.nodes.append(pf.Node(np.array(xi), i))
+            self.nodes.append(Node(np.array(xi), i))
 
         self.elements = []
 
-        self.elements.append(pf.Element([0,1,2,3,4,5,6,7], 'hex', 0, 0))
+        self.elements.append(Element([0,1,2,3,4,5,6,7], 'hex', 0, 0))
 
         self.nnodes = len(self.nodes)
         self.nel = len(self.elements)
@@ -78,12 +78,12 @@ class TwoBricks:
         x.append([2.0, 1.0, 1.0])
 
         for i, xi in enumerate(x):
-            self.nodes.append(pf.Node(np.array(xi), i))
+            self.nodes.append(Node(np.array(xi), i))
 
         self.elements = []
 
-        self.elements.append(pf.Element([0, 1, 2, 3, 4, 5, 6, 7], 'hex', 0, 0))
-        self.elements.append(pf.Element([1, 8, 9, 2, 5, 10, 11, 6], 'hex', 0, 0))
+        self.elements.append(Element([0, 1, 2, 3, 4, 5, 6, 7], 'hex', 0, 0))
+        self.elements.append(Element([1, 8, 9, 2, 5, 10, 11, 6], 'hex', 0, 0))
 
         self.nnodes = len(self.nodes)
         self.nel = len(self.elements)

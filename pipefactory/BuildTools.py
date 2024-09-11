@@ -1,4 +1,4 @@
-import pipefactory as pf
+from ..pipefactory import Pipe
 from json import load
 import numpy as np
 
@@ -38,7 +38,7 @@ def PartitionROM(input_json):
             mesh_info.add_bend(dict["radius"], dict["direction_end"])
             mesh_info.add_straight(1.6)
 
-            mesh = pf.Pipe(outer_radius = mesh_info.outer_radius, 
+            mesh = Pipe(outer_radius = mesh_info.outer_radius, 
                         thickness = mesh_info.thickness, 
                         section_list=mesh_info.section_list, 
                         elem_type=("hex", False), 

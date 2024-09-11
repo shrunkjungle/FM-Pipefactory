@@ -2,7 +2,7 @@ import streamlit as st
 import numpy as np
 import altair as alt
 
-import pipefactory as pf
+from ...pipefactory import Pipe
 
 #######################
 # Page configuration
@@ -195,7 +195,7 @@ if submitted_model:
     higher_order = False
     if element_order == 2:
             higher_order = True
-    mesh = pf.Pipe(radius,thickness,section_list,(element_type,higher_order), element_size)
+    mesh = Pipe(radius,thickness,section_list,(element_type,higher_order), element_size)
     mesh.export(campaign_name + ".vtk")
 
 

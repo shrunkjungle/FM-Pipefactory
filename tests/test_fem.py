@@ -1,9 +1,9 @@
 def test_B_matrix():
 
     import numpy as np
-    import pipefactory as pf
+    from ..pipefactory import LinearElasticity
 
-    le = pf.LinearElasticity(reduced = True)
+    le = LinearElasticity(reduced = True)
 
     B = le.computeBMatrix(le.gauss.points[0].dN)
 
@@ -29,11 +29,11 @@ def test_B_matrix():
 def test_isoparametric():
 
     import numpy as np
-    import pipefactory as pf
+    from pipefactory import UnitBrick, LinearElasticity
 
-    mesh = pf.UnitBrick()
+    mesh = UnitBrick()
 
-    le = pf.LinearElasticity(reduced = True)
+    le = LinearElasticity(reduced = True)
 
     def getX(e):
         ln = e.list_of_nodes
@@ -60,7 +60,7 @@ def test_stiffness_matrix():
 
     import random
     import numpy as np
-    import pipefactory as pf
+    from ..pipefactory import Pipe, LinearElasticity
 
     Straight0 = {
         'Name': 'Straight0',
@@ -68,9 +68,9 @@ def test_stiffness_matrix():
         'type': 'Straight',
     }
 
-    mesh = pf.Pipe(70., thickness= 3.0, section_list=[Straight0], elem_type=("hex", False), element_size=6.0, elements_through_thickness=3)
+    mesh = Pipe(70., thickness= 3.0, section_list=[Straight0], elem_type=("hex", False), element_size=6.0, elements_through_thickness=3)
 
-    le = pf.LinearElasticity(reduced = False)
+    le = LinearElasticity(reduced = False)
 
     def getX(e):
         ln = e.list_of_nodes

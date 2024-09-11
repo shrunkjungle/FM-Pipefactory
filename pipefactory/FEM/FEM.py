@@ -3,7 +3,7 @@ import numpy as np
 from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import eigsh
 
-import pipefactory as pf
+from ...pipefactory import LinearElasticity, CollarLoad
 
 class FEM:
 
@@ -18,7 +18,7 @@ class FEM:
 
         self.tdof = 3 * mesh.nnodes
 
-        self.le = pf.LinearElasticity(reduced)
+        self.le = LinearElasticity(reduced)
 
         self.assemble()
 
@@ -85,7 +85,7 @@ class FEM:
         self.K_global = coo_matrix((values, (indices_row, indices_col)), shape=(self.tdof, self.tdof))
         self.M_global = coo_matrix((values_M, (indices_row, indices_col)), shape=(self.tdof, self.tdof))
         
-    def assemble_load(self, load : pf.CollarLoad):
+    def assemble_load(self, load : CollarLoad):
         """
             This function accepts a CollarLoad and evaluates it over the surface and assembles the load vector.
         """
