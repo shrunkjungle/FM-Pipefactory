@@ -1,6 +1,7 @@
 import numpy as np
 
-from ...pipefactory import LinearHex, LinearQuad
+# from ...pipefactory import LinearHex, LinearQuad
+from .shapefunctions import LinearHex, LinearQuad
 
 class IntPoint():
 

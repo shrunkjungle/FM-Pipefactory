@@ -1,4 +1,5 @@
-from ..pipefactory import Pipe
+# from pipefactory import Pipe
+from .Pipe import Pipe
 from json import load
 import numpy as np
 

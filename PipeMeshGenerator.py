@@ -28,6 +28,6 @@ mesh = Pipe(outer_radius = mesh_info.outer_radius,
             #thermal_expansion_opt=therm_opt,
             )
 
-mesh.degenerate_crack(RadialCrack(0.4,0.,np.pi,0., 0.01,mesh_info.outer_radius,mesh_info.thickness,0., mesh_info.elements_through_thickness))
+mesh.degenerate_crack(RadialCrack(0.4,0.,np.pi,0., 0.01,0.))
 mesh.export(f'{name}.xdmf')
 # mesh_info.save_to_json(f'{name}', mesh.midline.tolist())

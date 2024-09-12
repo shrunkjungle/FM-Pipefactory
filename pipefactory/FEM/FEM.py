@@ -3,7 +3,9 @@ import numpy as np
 from scipy.sparse import coo_matrix
 from scipy.sparse.linalg import eigsh
 
-from ...pipefactory import LinearElasticity, CollarLoad
+# from ...pipefactory import LinearElasticity, CollarLoad
+from .LinearElastic import LinearElasticity
+from .Loads import CollarLoad
 
 class FEM:
 

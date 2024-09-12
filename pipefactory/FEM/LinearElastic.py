@@ -1,6 +1,7 @@
 import numpy as np
-from ...pipefactory import LinearHex, GaussQuadrature, GaussQuadrature2D
-
+# from ...pipefactory import LinearHex, GaussQuadrature, GaussQuadrature2D
+from .shapefunctions import LinearHex
+from .intpoints import GaussQuadrature, GaussQuadrature2D
 
 class LinearElasticity:
 

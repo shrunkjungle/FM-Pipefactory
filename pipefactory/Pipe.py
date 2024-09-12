@@ -1,4 +1,7 @@
-from ..pipefactory import Node, Element, find_section, rot_vec, get_orthogonal_inplane, rotate_point_about_point, rotate_triad, RadialCrack, Cuboid
+# from pipefactory import Node, Element, find_section, rot_vec, get_orthogonal_inplane, rotate_point_about_point, rotate_triad, RadialCrack, Cuboid
+from .FEM.Mesh import Node, Element
+from .UtilityFunctions import find_section, rot_vec, get_orthogonal_inplane, rotate_point_about_point, rotate_triad
+from .Defects.Defects import RadialCrack, Cuboid
 
 import meshio
 import numpy as np

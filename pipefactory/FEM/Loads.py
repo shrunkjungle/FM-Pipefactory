@@ -1,6 +1,7 @@
 import numpy as np
 
-from ...pipefactory import cylinder_geodesic_distance
+# from pipefactory import cylinder_geodesic_distance
+from ..UtilityFunctions import cylinder_geodesic_distance
 
 class CollarLoad:
 

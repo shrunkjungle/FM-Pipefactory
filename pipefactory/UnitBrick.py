@@ -1,5 +1,6 @@
 import numpy as np
-from ..pipefactory import Node, Element
+# from pipefactory import Node, Element
+from .FEM.Mesh import Node, Element
 
 import meshio
 
