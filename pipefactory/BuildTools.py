@@ -3,7 +3,7 @@ from .Pipe import Pipe
 from json import load
 import numpy as np
 
-def PartitionROM(input_json):
+def PartitionROM(input_json, limb_len = 1.6):
     """
     Partition mesh into separate bends in order to do Reduced Order FEM.
     
@@ -26,6 +26,26 @@ def PartitionROM(input_json):
     bend_count = 0
     current_dir = [1.0,0.0,0.0]
 
+    mesh_info = PipeParam(outer_radius = radius, 
+                        thickness = thickness, 
+                        element_size = el_len,
+                        element_around_circum = el_circum, 
+                        elements_through_thickness = el_thruthick,
+                        initial_direction = current_dir)
+
+    mesh_info.add_straight(2*limb_len)
+
+    mesh = Pipe(outer_radius = mesh_info.outer_radius, 
+                thickness = mesh_info.thickness, 
+                section_list=mesh_info.section_list, 
+                elem_type=("hex", False), 
+                element_size = mesh_info.element_size,
+                element_around_circum = mesh_info.element_around_circum, 
+                elements_through_thickness = mesh_info.elements_through_thickness)
+
+    mesh.export(f'{input_json}_straight.xdmf')
+    mesh_info.save_to_json(f'{input_json}_straight', mesh.midline.tolist())
+
     for dict in data["Mesh Sections"]:
         if dict["type"] == "Bend":
             mesh_info = PipeParam(outer_radius = radius, 
@@ -35,9 +55,9 @@ def PartitionROM(input_json):
                                 elements_through_thickness = el_thruthick,
                                 initial_direction = current_dir)
 
-            mesh_info.add_straight(1.6)
+            mesh_info.add_straight(limb_len)
             mesh_info.add_bend(dict["radius"], dict["direction_end"])
-            mesh_info.add_straight(1.6)
+            mesh_info.add_straight(limb_len)
 
             mesh = Pipe(outer_radius = mesh_info.outer_radius, 
                         thickness = mesh_info.thickness, 

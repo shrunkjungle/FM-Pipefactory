@@ -1,20 +1,19 @@
 import numpy as np
-from .pipefactory import PipeParam, Pipe, RadialCrack
+from pipefactory import PipeParam, Pipe, RadialCrack, PartitionROM
 
 ########### Input Parameters #############
 
+name = f"rom_test"
 
-name = f"foo"
-
-mesh_info = PipeParam(outer_radius = 0.0366, 
+mesh_info = PipeParam(outer_radius = 0.0365, 
                       thickness = 0.00305, 
                       element_size = 0.01,
                       element_around_circum = 48, 
                       elements_through_thickness = 3)
 
-mesh_info.add_straight(1.6)
+mesh_info.add_straight(1.0)
 mesh_info.add_bend(1.0, [1.,0.,-1.])
-mesh_info.add_straight(1.6)
+mesh_info.add_straight(1.0)
 
 
 mesh = Pipe(outer_radius = mesh_info.outer_radius, 
@@ -28,6 +27,8 @@ mesh = Pipe(outer_radius = mesh_info.outer_radius,
             #thermal_expansion_opt=therm_opt,
             )
 
-mesh.degenerate_crack(RadialCrack(0.4,0.,np.pi,0., 0.01,0.))
+# mesh.degenerate_crack(RadialCrack(0.4,0.,np.pi,0., 0.01,0.))
 mesh.export(f'{name}.xdmf')
-# mesh_info.save_to_json(f'{name}', mesh.midline.tolist())
+mesh_info.save_to_json(f'{name}', mesh.midline.tolist())
+
+PartitionROM(name)
