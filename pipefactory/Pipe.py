@@ -9,7 +9,7 @@ from scipy.sparse import coo_matrix
 
 class Pipe():
 
-    
+    #TODO should remove old formulation in favour of bend_new etc
 
     def __init__(self,
                  outer_radius : float,
@@ -828,9 +828,12 @@ class Pipe():
     
     def export(self, 
                filename: str = "foo.vtk",
-               point_data : dict = {},
-               cell_data : dict = {},
+               save_point_data : bool = False,
+               save_cell_data : bool = False
                ):
+        
+        point_data = {}
+        cell_data = {}
         
         points = [] 
         for n in self.nodes:
@@ -857,15 +860,16 @@ class Pipe():
             (elem_type, connectivity),
         ]
 
-        #tag elements in walls
-        walltags = np.zeros(self.nel) #cell data
-        walltags[self.outer_element_indices] = 1
-        walltags[self.inner_element_indices] = -1
-        
-        #remove inactive elements (e.g. for defects)
-        inactive_elems = [e.global_id for e in self.elements if not e.active]
-        walltags = np.delete(walltags, inactive_elems)
+        if save_cell_data:
+            #tag elements in walls
+            walltags = np.zeros(self.nel) #cell data
+            walltags[self.outer_element_indices] = 1
+            walltags[self.inner_element_indices] = -1
+            
+            #remove inactive elements (e.g. for defects)
+            inactive_elems = [e.global_id for e in self.elements if not e.active]
+            walltags = np.delete(walltags, inactive_elems)
 
-        cell_data.update({"walltags": [walltags]})
+            cell_data.update({"walltags": [walltags]})
         # Alternative with the same options
         meshio.write_points_cells(filename, points, cells, point_data=point_data, cell_data=cell_data)          

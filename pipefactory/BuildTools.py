@@ -3,7 +3,7 @@ from .Pipe import Pipe
 from json import load
 import numpy as np
 
-def PartitionROM(input_json, limb_len = 1.6):
+def PartitionROM(input_json : str, limb_len : float = 1.6):
     """
     Partition mesh into separate bends in order to do Reduced Order FEM.
     
@@ -75,13 +75,13 @@ def PartitionROM(input_json, limb_len = 1.6):
 
 class PipeParam:
     def __init__(self,
-                 outer_radius, 
-                 thickness,
-                 element_size,
-                 element_around_circum, 
-                 elements_through_thickness,
-                 initial_direction = [1.0,0.0,0.0],
-                 origin = [0.,0.,0.]):
+                 outer_radius : float, 
+                 thickness : float,
+                 element_size : float,
+                 element_around_circum : int, 
+                 elements_through_thickness : int,
+                 initial_direction : list = [1.0,0.0,0.0],
+                 origin : list = [0.,0.,0.]):
         
         self.outer_radius = outer_radius
         self.thickness=thickness
@@ -94,7 +94,7 @@ class PipeParam:
         self.current_dir = initial_direction
         self.origin = origin
 
-    def add_straight(self, length):
+    def add_straight(self, length : float):
 
         s_dict = {'length':length,
                   'dir': np.array(self.current_dir),
@@ -107,7 +107,7 @@ class PipeParam:
         self.section_list.append(s_dict)
         self.mesh_sections.append(ss_dict)
 
-    def add_bend(self, radius, direction):
+    def add_bend(self, radius : float, direction : list | np.ndarray):
 
         direction = np.array(direction)/np.linalg.norm(np.array(direction))
 
@@ -131,7 +131,7 @@ class PipeParam:
 
         self.current_dir = direction.tolist()
 
-    def save_to_json(self, name, midline):
+    def save_to_json(self, name : str, midline : np.ndarray | None):
 
         self.pipe_parameters = {
             'Outer Radius': self.outer_radius,
@@ -150,6 +150,34 @@ class PipeParam:
         }
 
         from json import dump
-
         with open(f'{name}.json', 'w') as file:
             dump(data_to_save, file, indent=4)
+
+    def load_json(self, name : str):
+
+        from json import load
+        with open(f"{name}.json", 'r') as file:
+            data = load(file)
+
+        params = data["Pipe Parameters"]
+
+        self.outer_radius = params['Outer Radius']
+        self.thickness=params['Thickness']
+        self.element_size=params['Element Size']
+        self.element_around_circum=params['Elements around Circumference']
+        self.elements_through_thickness=params['Elements through Thickness']
+
+        self.section_list = []
+        for dic in data["Mesh Sections"]:
+            if dic["type"] == "Straight":
+                self.section_list.append({'length':dic['length'],
+                                          'dir': np.array(dic['direction']),
+                                          'type': 'Straight_new'})
+            else:
+                self.section_list.append({'type': 'Bend_new',
+                                          'param': {'dir1' : np.array(dic['direction_begin']),
+                                                    'dir2' : np.array(dic['direction_end']),
+                                                    'radius': dic['radius'],
+                                                    'angle' : dic['length']/dic['radius']}
+                                                    })
+        self.mesh_sections = data
