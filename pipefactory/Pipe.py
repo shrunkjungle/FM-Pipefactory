@@ -19,6 +19,7 @@ class Pipe():
                  element_size: float,
                  element_around_circum: int,
                  elements_through_thickness: int = 1,
+                 origin: list[float] = [0.,0.,0.],
                  partition: bool = False,
                  nparts: int = None,
                  size_overlap: int = None,
@@ -32,6 +33,7 @@ class Pipe():
         self.element_size = element_size
         self.element_around_circum = element_around_circum
         self.ett = elements_through_thickness
+        self.origin = origin
 
         self.v = {
         "z": np.array([0.0, 0.0, 1.0]),
@@ -429,7 +431,7 @@ class Pipe():
 
         self.triads = [ self.tri ] * ( len(self.section_ends) + 1 )
         
-        self.x_sec_ends = [np.array([0., 0., 0.])] * ( len(self.section_ends) + 1 ) # origin is [0,0,0]
+        self.x_sec_ends = [np.array(self.origin)] * ( len(self.section_ends) + 1 ) # origin is [0,0,0]
         
         for i in range(len(self.section_ends)): # for each of the sections ends
             x0 = self.x_sec_ends[i] # This is the coordinates of the last end
