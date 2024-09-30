@@ -1,7 +1,7 @@
 # from pipefactory import Node, Element, find_section, rot_vec, get_orthogonal_inplane, rotate_point_about_point, rotate_triad, RadialCrack, Cuboid
 from .FEM.Mesh import Node, Element
 from .UtilityFunctions import find_section, rot_vec, get_orthogonal_inplane, rotate_point_about_point, rotate_triad
-from .Defects.Defects import RadialCrack, Cuboid
+from .Defects.Defects import AxialCrack, RadialCrack, Cuboid
 
 import meshio
 import numpy as np
@@ -504,7 +504,7 @@ class Pipe():
     
     def add_defect_displacement(self, defect_instance):
 
-        defect_instance.read_mesh_param(self.outer_radius, self.thickness, self.ett)
+        defect_instance.read_mesh_param(self)
 
         for n in self.nodes: # loop through nodes 
             idx = n.midline_indx 
@@ -517,7 +517,7 @@ class Pipe():
 
     def add_elements(self, cuboid_instance : Cuboid):
 
-        cuboid_instance.read_mesh_param(self.outer_radius, self.thickness, self.ett)
+        cuboid_instance.read_mesh_param(self)
         cuboid_instance.elements_deep()
 
         if self.elem_type != "hex":
@@ -622,7 +622,7 @@ class Pipe():
 
     def remove_elements(self, hole_instance):
 
-        hole_instance.read_mesh_param(self.outer_radius, self.thickness, self.ett)
+        hole_instance.read_mesh_param(self)
 
         for e in self.elements: # loop through all elements
 
@@ -654,7 +654,7 @@ class Pipe():
 
     def degenerate_crack(self, crack_instance : RadialCrack):
 
-        crack_instance.read_mesh_param(self.outer_radius, self.thickness, self.ett)
+        crack_instance.read_mesh_param(self)
         crack_instance.stepped_depth()
 
         crack_mid_idx, left_idx, right_idx = crack_instance.affected_idx(self.midline)
@@ -699,7 +699,69 @@ class Pipe():
                     x0 = self.midline_x[idx]
                     x = n.coords
 
-                    n.coords += dz * self.midline_triad[crack_mid_idx][0] + dr*((x - x0) / np.linalg.norm(x - x0))
+                    n.coords += dz * self.midline_triad[idx][0] + dr*((x - x0) / np.linalg.norm(x - x0))
+
+        self.nnodes = len(self.nodes)
+
+    def degenerate_crack2(self, crack_instance : AxialCrack):
+        crack_instance.read_mesh_param(self)
+        crack_instance.stepped_depth()
+
+        if self.elem_type != "hex":
+            raise Exception("Only Hex elements supported currently.")
+
+        mid_idxs = crack_instance.crack_mid_idxs(self.midline)
+
+        crack_phi, left_phi, right_phi = crack_instance.affected_phi()
+
+        left_factor = np.linspace(1./(len(left_phi)+1), 1. - 1./(len(left_phi)+1), len(left_phi)).tolist()
+        right_factor = np.linspace(1./(len(right_phi)+1), 1. - 1./(len(right_phi)+1), len(right_phi)).tolist()
+
+        crack_idxs = []
+        for n in self.nodes:
+            if n.midline_indx in mid_idxs:
+                if n.phi == crack_phi:
+                    if crack_instance.is_in_crack(n):
+                        crack_idxs.append(n.global_id)
+
+        from copy import deepcopy
+
+        new_nnodes = self.nnodes-1
+        for i in crack_idxs:
+            new_nnodes += 1
+            degen_node = deepcopy(self.nodes[i])
+            degen_node.global_id = new_nnodes
+            self.nodes.append(degen_node)
+
+        el_mid_idxs = [mid_idxs[0]-1] + deepcopy(mid_idxs)
+
+        for el_idx, e in enumerate(self.elements):
+            if (e.midline_indx in el_mid_idxs):
+                for crack_idx, id in enumerate(crack_idxs):
+                    if (id in e.list_of_nodes[0:2]) or (id in e.list_of_nodes[4:6]):
+                        self.elements[el_idx].list_of_nodes = list(map(lambda x: self.nnodes + crack_idx if x == id else x, self.elements[el_idx].list_of_nodes))
+
+        for n in self.nodes:
+            if n.midline_indx in mid_idxs:
+                if n.phi in (left_phi+right_phi) or n.phi == crack_phi:
+                    if n.phi == crack_phi:
+                        phifactor = 1.
+                    elif n.phi in left_phi:
+                        phifactor = left_factor[left_phi.index(n.phi)]
+                    else:
+                        phifactor = -1 * right_factor[right_phi.index(n.phi)]
+                    
+                    dth, dr = crack_instance(n, phifactor, self.nnodes)
+
+                    idx = n.midline_indx 
+                    x0 = self.midline_x[idx]
+                    x = n.coords
+
+                    r_hat = (x - x0) / np.linalg.norm(x - x0)
+                    th_vec = np.cross(r_hat, self.midline_triad[idx][0])
+                    th_hat = th_vec/np.linalg.norm(th_vec)
+
+                    n.coords += dth * th_hat + dr*r_hat
 
         self.nnodes = len(self.nodes)
 

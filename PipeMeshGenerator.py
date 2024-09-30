@@ -1,49 +1,49 @@
 import numpy as np
-from pipefactory import PipeParam, Pipe, RadialCrack, PartitionROM
+import pipefactory as pf
 
 ########### Input Parameters #############
 
-# name = f"bar"
-# 
+name = f"bar"
+
+mesh_info = pf.PipeParam(outer_radius = 0.0365, 
+                      thickness = 0.01, 
+                      element_size = 0.01,
+                      element_around_circum = 32, 
+                      elements_through_thickness = 3,
+                      )
+
+mesh_info.add_bend(0.1, [0.,0.,1.])
+
+# name = f"foo"
+
 # mesh_info = PipeParam(outer_radius = 0.0365, 
 #                       thickness = 0.00305, 
 #                       element_size = 0.01,
 #                       element_around_circum = 48, 
 #                       elements_through_thickness = 3,
-#                       )
+#                       initial_direction=[np.cos(np.deg2rad(8)), 0., -np.sin(np.deg2rad(8))],
+#                       origin=[0.,0.,0.])
 
-# mesh_info.add_straight(1.0)
+# mesh_info.add_straight(1.015)
+# mesh_info.add_bend(1.0, [np.cos(np.deg2rad(14)), 0., -np.sin(np.deg2rad(14))])
+# mesh_info.add_straight(0.095)
+# mesh_info.add_bend(1.0, [1.,0.,0.])
+# mesh_info.add_straight(0.802)
+# mesh_info.add_bend(1.0, [np.cos(np.deg2rad(18)), 0., -np.sin(np.deg2rad(18))])
+# mesh_info.add_straight(0.110)
+# mesh_info.add_bend(1.0, [1.,0.,0.])
+# mesh_info.add_straight(1.192)
 
-name = f"foo"
+# mesh_info.add_bend(1.0, [np.cos(np.deg2rad(45)), -np.sin(np.deg2rad(45)),0.])
+# mesh_info.add_straight(0.539)
+# mesh_info.add_bend(1.0, [1.,0.,0.])
+# mesh_info.add_straight(2.023)
+# mesh_info.add_bend(1.0, [np.cos(np.deg2rad(23)), -np.sin(np.deg2rad(23)),0.])
+# mesh_info.add_straight(0.258)
+# mesh_info.add_bend(1.0, [1.,0.,0.])
+# mesh_info.add_straight(1.239)
 
-mesh_info = PipeParam(outer_radius = 0.0365, 
-                      thickness = 0.00305, 
-                      element_size = 0.01,
-                      element_around_circum = 48, 
-                      elements_through_thickness = 3,
-                      initial_direction=[np.cos(np.deg2rad(8)), 0., -np.sin(np.deg2rad(8))],
-                      origin=[0.,0.,0.])
-
-mesh_info.add_straight(1.015)
-mesh_info.add_bend(1.0, [np.cos(np.deg2rad(14)), 0., -np.sin(np.deg2rad(14))])
-mesh_info.add_straight(0.095)
-mesh_info.add_bend(1.0, [1.,0.,0.])
-mesh_info.add_straight(0.802)
-mesh_info.add_bend(1.0, [np.cos(np.deg2rad(18)), 0., -np.sin(np.deg2rad(18))])
-mesh_info.add_straight(0.110)
-mesh_info.add_bend(1.0, [1.,0.,0.])
-mesh_info.add_straight(1.192)
-
-mesh_info.add_bend(1.0, [np.cos(np.deg2rad(45)), -np.sin(np.deg2rad(45)),0.])
-mesh_info.add_straight(0.539)
-mesh_info.add_bend(1.0, [1.,0.,0.])
-mesh_info.add_straight(2.023)
-mesh_info.add_bend(1.0, [np.cos(np.deg2rad(23)), -np.sin(np.deg2rad(23)),0.])
-mesh_info.add_straight(0.258)
-mesh_info.add_bend(1.0, [1.,0.,0.])
-mesh_info.add_straight(1.239)
-
-mesh = Pipe(outer_radius = mesh_info.outer_radius, 
+mesh = pf.Pipe(outer_radius = mesh_info.outer_radius, 
             thickness = mesh_info.thickness, 
             section_list=mesh_info.section_list, 
             elem_type=("hex", False), 
@@ -55,8 +55,10 @@ mesh = Pipe(outer_radius = mesh_info.outer_radius,
             #thermal_expansion_opt=therm_opt,
             )
 
+mesh.degenerate_crack2(pf.AxialCrack(0.1, 0.0,0.05, 0.003,0.005, 0.04))
+
 mesh.export(f'{name}.xdmf')
-mesh_info.save_to_json(f'{name}', mesh.midline.tolist())
+# mesh_info.save_to_json(f'{name}', mesh.midline.tolist())
 
 # PartitionROM("ITER_M6")
 
