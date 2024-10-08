@@ -80,7 +80,7 @@ class PipeParam:
                  element_size : float,
                  element_around_circum : int, 
                  elements_through_thickness : int,
-                 initial_direction : list = [1.0,0.0,0.0],
+                 initial_direction : list = [0.0,0.0,1.0],
                  origin : list = [0.,0.,0.]):
         
         self.outer_radius = outer_radius

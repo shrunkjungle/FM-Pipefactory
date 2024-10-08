@@ -85,7 +85,7 @@ class Pipe():
                 elif s['type'].lower() == 'bend_new':
                     self.init_dir = s['param']['dir1']
                 else:
-                    self.init_dir = np.array([1.,0.,0.])
+                    self.init_dir = np.array([0.,0.,1.])
 
             if s['type'].lower() == 'straight':
                 self.length += s['length']
@@ -216,8 +216,8 @@ class Pipe():
         for l, zi in enumerate(z):
             for i, s in enumerate(self.midline):
                 for j, th in enumerate(theta):
-                    x = np.array([s, (self.radius + zi) * np.sin(th), (self.radius + zi) * np.cos(th)])
-                    v = np.array([0.0, (self.radius + zi) * np.sin(th), (self.radius + zi) * np.cos(th)])
+                    x = np.array([(self.radius + zi) * np.cos(th), (self.radius + zi) * np.sin(th), s])
+                    v = np.array([(self.radius + zi) * np.cos(th), (self.radius + zi) * np.sin(th), 0.0])
                     nodes.append(Node(x, k, v=v, phi = th))
                     nodes[-1].set_midline_indx(i)
                     k += 1 # Increment Global Counter
@@ -378,7 +378,7 @@ class Pipe():
 
         self.outer_face = []
         for i, n in enumerate(self.nodes):
-            if (np.abs(np.linalg.norm(self.midline_x[n.midline_indx] - n.coords) - (self.radius + 0.5 * self.thickness))) < 1e-4:
+            if (np.abs(np.linalg.norm(self.midline_x[n.midline_indx] - n.coords) - (self.radius + 0.5 * self.thickness))) < 1e-4: #! this should be relative to element depth
                 self.outer_face.append(i)
 
     def find_inside_face(self):
@@ -422,10 +422,10 @@ class Pipe():
                          np.array([0., 1., 0.]), 
                          np.array([0., 0., 1.])]
 
-        init_angle = np.arccos(self.init_dir[0]) # np.dot([1,0,0], init_dir)
+        init_angle = np.arccos(self.init_dir[2]) # np.dot([0,0,1], init_dir)
 
         if init_angle > 0.0:
-            init_axis = np.cross(np.array([1.,0.,0.]),self.init_dir)
+            init_axis = np.cross(np.array([0.,0.,1.]),self.init_dir)
             init_axis = init_axis/np.linalg.norm(init_axis)
             self.tri = rotate_triad(self.tri, init_axis, init_angle)
 
@@ -440,14 +440,14 @@ class Pipe():
             if self.section_list[i]['type'].lower() == 'straight':
                 l = self.section_list[i]['length']
                 self.triads[i+1] = self.triads[i].copy()
-                self.x_sec_ends[i + 1] = self.get_coords_straight(l, x0, self.triads[i][0])
+                self.x_sec_ends[i + 1] = self.get_coords_straight(l, x0, self.triads[i][2])
 
             #############NEW
 
             elif self.section_list[i]['type'].lower() == 'straight_new':
                 l = self.section_list[i]['length']
                 self.triads[i+1] = self.triads[i].copy()
-                self.x_sec_ends[i + 1] = self.get_coords_straight(l, x0, self.triads[i][0])
+                self.x_sec_ends[i + 1] = self.get_coords_straight(l, x0, self.triads[i][2])
 
             # Bend Section
             elif self.section_list[i]['type'].lower() == 'bend': # If it is a bend
@@ -699,7 +699,7 @@ class Pipe():
                     x0 = self.midline_x[idx]
                     x = n.coords
 
-                    n.coords += dz * self.midline_triad[idx][0] + dr*((x - x0) / np.linalg.norm(x - x0))
+                    n.coords += dz * self.midline_triad[idx][2] + dr*((x - x0) / np.linalg.norm(x - x0))
 
         self.nnodes = len(self.nodes)
 
@@ -758,7 +758,7 @@ class Pipe():
                     x = n.coords
 
                     r_hat = (x - x0) / np.linalg.norm(x - x0)
-                    th_vec = np.cross(r_hat, self.midline_triad[idx][0])
+                    th_vec = np.cross(r_hat, self.midline_triad[idx][2])
                     th_hat = th_vec/np.linalg.norm(th_vec)
 
                     n.coords += dth * th_hat + dr*r_hat
@@ -836,10 +836,10 @@ class Pipe():
             s = self.midline[i] - self.section_starts[id] # Distane into this section (arclength)
 
             if self.section_list[id]['type'].lower() == 'straight':
-                self.midline_x[i] = self.get_coords_straight(s, x0, t[0])
+                self.midline_x[i] = self.get_coords_straight(s, x0, t[2])
                 self.midline_triad[i] = t.copy() # For a straight pipe this doesn't change
             elif self.section_list[id]['type'].lower() == 'straight_new':
-                self.midline_x[i] = self.get_coords_straight(s, x0, t[0])
+                self.midline_x[i] = self.get_coords_straight(s, x0, t[2])
                 self.midline_triad[i] = t.copy() # For a straight pipe this doesn't change
             elif self.section_list[id]['type'].lower() == 'bend':
 
@@ -876,13 +876,13 @@ class Pipe():
         for i, n in enumerate(self.nodes): # For each node.
             idx = n.midline_indx # This is the index of the midline
             dr = self.midline_triad[idx][1]
-            dn = self.midline_triad[idx][2]
-            n.coords = self.midline_x[idx] + n.v[1] * dr + n.v[2] * dn 
+            dn = self.midline_triad[idx][0]
+            n.coords = self.midline_x[idx] + n.v[1] * dr + n.v[0] * dn 
             
-    def mideline_to_node(self,
-                         node : Node):
+    # def mideline_to_node(self,
+    #                      node : Node):
         
-        return node.coords - np.array([self.mesh.s[node.midline_indx], 0.0, 0.0])
+    #     return node.coords - np.array([self.mesh.s[node.midline_indx], 0.0, 0.0])
 
     def get_coords_straight(self, 
                             s : float,
