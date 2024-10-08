@@ -35,11 +35,11 @@ class Pipe():
         self.ett = elements_through_thickness
         self.origin = origin
 
-        self.v = {
-        "z": np.array([0.0, 0.0, 1.0]),
-        "y": np.array([0.0, -1.0, 0.0]),
-        "x": np.array([1.0, 0.0, 0.0])
-        }
+        # self.v = {
+        # "z": np.array([0.0, 0.0, 1.0]),
+        # "y": np.array([0.0, -1.0, 0.0]),
+        # "x": np.array([1.0, 0.0, 0.0])
+        # }
 
         self.midline_to_section = []
 
@@ -935,5 +935,10 @@ class Pipe():
             walltags = np.delete(walltags, inactive_elems)
 
             cell_data.update({"walltags": [walltags]})
+
+        if save_point_data:
+
+            zerodegline = [(1.0 if n.phi == 0. else 0.0) for n in self.nodes]
+            point_data.update({"zero degree": zerodegline})
         # Alternative with the same options
         meshio.write_points_cells(filename, points, cells, point_data=point_data, cell_data=cell_data)          

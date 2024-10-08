@@ -12,11 +12,14 @@ mesh_info = pf.PipeParam(outer_radius = 0.0365,
                       elements_through_thickness = 3,
                       )
 
-mesh_info.add_bend(0.1, [0.,0.,1.])
+mesh_info.add_straight(0.1)
+mesh_info.add_bend(1.0, [1.,1.,1.])
+mesh_info.add_straight(0.1)
+mesh_info.add_bend(0.2, [-1.0,0.6,0.8])
 
 # name = f"foo"
 
-# mesh_info = PipeParam(outer_radius = 0.0365, 
+# mesh_info = pf.PipeParam(outer_radius = 0.0365, 
 #                       thickness = 0.00305, 
 #                       element_size = 0.01,
 #                       element_around_circum = 48, 
@@ -55,9 +58,9 @@ mesh = pf.Pipe(outer_radius = mesh_info.outer_radius,
             #thermal_expansion_opt=therm_opt,
             )
 
-mesh.degenerate_crack2(pf.AxialCrack(0.1, 0.0,0.05, 0.003,0.005, 0.04))
+# mesh.degenerate_crack2(pf.AxialCrack(0.1, 0.0,0.05, 0.003,0.005, 0.04))
 
-mesh.export(f'{name}.xdmf')
+mesh.export(f'{name}.xdmf', save_point_data=True)
 # mesh_info.save_to_json(f'{name}', mesh.midline.tolist())
 
 # PartitionROM("ITER_M6")
