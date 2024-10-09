@@ -58,7 +58,12 @@ mesh = pf.Pipe(outer_radius = mesh_info.outer_radius,
             #thermal_expansion_opt=therm_opt,
             )
 
-# mesh.degenerate_crack2(pf.AxialCrack(0.1, 0.0,0.05, 0.003,0.005, 0.04))
+mesh.degenerate_crack2(pf.AxialCrack(0.1, 0.0,0.05, 0.003,0.005, 0.03))
+mesh.degenerate_crack(pf.RadialCrack(0.2,6.0,1.0, 0.004, 0.01, 0.03))
+mesh.add_defect_displacement(pf.Dimple(0.3,0.0,0.02, 0.04))
+mesh.add_elements(pf.Cuboid(0.6, 6.0, 1.0, 0.05, 0.02))
+
+mesh.quality_check()
 
 mesh.export(f'{name}.xdmf', save_point_data=True)
 # mesh_info.save_to_json(f'{name}', mesh.midline.tolist())

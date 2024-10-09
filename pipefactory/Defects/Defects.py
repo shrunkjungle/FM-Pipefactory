@@ -131,8 +131,6 @@ class Cuboid(Defect):
         self.l = length
         self.h = height
 
-        self.r_el, self.el_dr = self.elements_deep()
-
     def elements_deep(self):
         dx = self.thickness/self.ett
 
@@ -142,7 +140,7 @@ class Cuboid(Defect):
         else:
             r_el = int(np.floor(self.h/dx+0.5))
             el_dr = self.h/r_el
-        self.r_el, self.el_dr = r_el, el_dr
+        return r_el, el_dr
     
     def where_in_wedge(self,
                       phi : float):

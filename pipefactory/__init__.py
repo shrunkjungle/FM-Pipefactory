@@ -14,6 +14,7 @@ from .Defects.Refinement import AxialRefinement, Ramp
 
 from .Pipe import Pipe
 from .BuildTools import PipeParam, PartitionROM
+from .Quality import Analyzer
 
 from .UnitBrick import UnitBrick, TwoBricks
 

@@ -2,6 +2,7 @@
 from .FEM.Mesh import Node, Element
 from .UtilityFunctions import find_section, rot_vec, get_orthogonal_inplane, rotate_point_about_point, rotate_triad
 from .Defects.Defects import AxialCrack, RadialCrack, Cuboid
+from .Quality import Analyzer
 
 import meshio
 import numpy as np
@@ -518,7 +519,6 @@ class Pipe():
     def add_elements(self, cuboid_instance : Cuboid):
 
         cuboid_instance.read_mesh_param(self)
-        cuboid_instance.elements_deep()
 
         if self.elem_type != "hex":
             raise Exception("Only Hex elements supported currently.")
@@ -758,7 +758,7 @@ class Pipe():
                     x = n.coords
 
                     r_hat = (x - x0) / np.linalg.norm(x - x0)
-                    th_vec = np.cross(r_hat, self.midline_triad[idx][2])
+                    th_vec = np.cross(self.midline_triad[idx][2], r_hat)
                     th_hat = th_vec/np.linalg.norm(th_vec)
 
                     n.coords += dth * th_hat + dr*r_hat
@@ -899,6 +899,36 @@ class Pipe():
         point_data = {}
         cell_data = {}
         
+        points, cells = self.get_points_cells()
+
+        if save_cell_data:
+            #tag elements in walls
+            walltags = np.zeros(self.nel) #cell data
+            walltags[self.outer_element_indices] = 1
+            walltags[self.inner_element_indices] = -1
+            
+            #remove inactive elements (e.g. for defects)
+            inactive_elems = [e.global_id for e in self.elements if not e.active]
+            walltags = np.delete(walltags, inactive_elems)
+
+            cell_data.update({"walltags": [walltags]})
+
+        if save_point_data:
+
+            zerodegline = [(1.0 if n.phi == 0. else 0.0) for n in self.nodes]
+            point_data.update({"zero degree": zerodegline})
+
+        # Alternative with the same options
+        meshio.write_points_cells(filename, points, cells, point_data=point_data, cell_data=cell_data)
+
+    def quality_check(self):
+        points, cells = self.get_points_cells()
+
+        analyzer = Analyzer(meshio.Mesh(points, cells))
+
+        analyzer()
+
+    def get_points_cells(self):
         points = [] 
         for n in self.nodes:
             points.append(n.coords)
@@ -923,22 +953,4 @@ class Pipe():
         cells = [
             (elem_type, connectivity),
         ]
-
-        if save_cell_data:
-            #tag elements in walls
-            walltags = np.zeros(self.nel) #cell data
-            walltags[self.outer_element_indices] = 1
-            walltags[self.inner_element_indices] = -1
-            
-            #remove inactive elements (e.g. for defects)
-            inactive_elems = [e.global_id for e in self.elements if not e.active]
-            walltags = np.delete(walltags, inactive_elems)
-
-            cell_data.update({"walltags": [walltags]})
-
-        if save_point_data:
-
-            zerodegline = [(1.0 if n.phi == 0. else 0.0) for n in self.nodes]
-            point_data.update({"zero degree": zerodegline})
-        # Alternative with the same options
-        meshio.write_points_cells(filename, points, cells, point_data=point_data, cell_data=cell_data)          
+        return points, cells
