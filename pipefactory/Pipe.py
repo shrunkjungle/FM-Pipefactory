@@ -924,9 +924,11 @@ class Pipe():
     def quality_check(self):
         points, cells = self.get_points_cells()
 
-        analyzer = Analyzer(meshio.Mesh(points, cells))
-
+        # analyzer = Analyzer2(meshio.Mesh(points, cells))
+        analyzer = Analyzer(points, cells)
         analyzer()
+
+        return analyzer
 
     def get_points_cells(self):
         points = [] 

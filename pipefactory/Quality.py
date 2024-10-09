@@ -1,12 +1,13 @@
 from meshio import Mesh
 import numpy as np
+import pyvista as pv
 
 from neatmesh._reader import MeshReader3D
 from neatmesh._analyzer import Analyzer3D
 
 from prettytable import PrettyTable
 
-class Analyzer:
+class Analyzer2:
 
     def __init__(self, meshio_mesh : Mesh):
 
@@ -56,6 +57,43 @@ class Analyzer:
 
         print(t)
 
+
+class Analyzer:
+
+    def __init__(self, points, cells):
+
+        pv_cells = [x for sublist in cells[0][1] for x in ([8]+sublist)]
+
+        grid = pv.UnstructuredGrid(pv_cells,[pv.CellType.HEXAHEDRON]*len(cells[0][1]), points)
+
+        self.analyze(grid)
+
+    def analyze(self, grid):
+        self.skew = grid.compute_cell_quality(quality_measure="skew")
+        self.dim = grid.compute_cell_quality(quality_measure="dimension")
+        self.vol = grid.compute_cell_quality(quality_measure="volume")
+        
+
+    def get_stats_from_array(self, array):
+
+        arr_max = np.nanmax(array)
+        arr_min = np.nanmin(array)
+        arr_mean = np.nanmean(array)
+        arr_std = np.nanstd(array)
+
+        return [arr_max, arr_min, arr_mean, arr_std]
+
+    def __call__(self):
+
+        quality_metrics_dict = {
+            "volume": self.vol, "skew": self.skew, "dimension": self.dim}
+        
+        t = PrettyTable(["Stat.", "Max.", "Min.", "Mean", "Std."])
+
+        for k, v in quality_metrics_dict.items():
+            t.add_row([k] + self.get_stats_from_array(pv.convert_array(v.active_scalars)))
+
+        print(t)
 
 
 

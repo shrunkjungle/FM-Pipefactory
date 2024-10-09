@@ -63,9 +63,10 @@ mesh.degenerate_crack(pf.RadialCrack(0.2, 7.0, np.pi, 0.004, 0.01, 0.0))
 mesh.add_defect_displacement(pf.Dimple(0.3,0.0,0.02, 0.04))
 mesh.add_elements(pf.Cuboid(0.6, 6.0, 1.0, 0.05, 0.02))
 
-mesh.quality_check()
+asd = mesh.quality_check()
+asd.skew.plot()
 
-mesh.export(f'{name}.xdmf', save_point_data=True)
+# mesh.export(f'{name}.xdmf', save_point_data=True)
 # mesh_info.save_to_json(f'{name}', mesh.midline.tolist())
 
 # PartitionROM("ITER_M6")
