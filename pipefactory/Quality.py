@@ -73,7 +73,20 @@ class Analyzer:
         self.dim = grid.compute_cell_quality(quality_measure="dimension")
         self.vol = grid.compute_cell_quality(quality_measure="volume")
         self.diag = grid.compute_cell_quality(quality_measure="diagonal")
-        
+        self.adjvol = self.adj_cell_vol(grid)
+
+        # grid = grid.compute_cell_quality(quality_measure="skew")
+        # grid.rename_array("CellQuality","skew")
+
+    def adj_cell_vol(self, grid):
+        vol_array = self.vol.active_scalars
+        adj_max = np.zeros(grid.n_cells)
+        for i in range(grid.n_cells):
+            neigh = grid.cell_neighbors(i, "faces")
+            adj_max[i] = np.max(np.concatenate([vol_array[neigh]/vol_array[i],vol_array[i]/vol_array[neigh]]))
+        grid.cell_data["CellQuality"] = adj_max
+        grid.set_active_scalars("CellQuality")
+        return grid
 
     def get_stats_from_array(self, array):
 
@@ -86,15 +99,15 @@ class Analyzer:
 
     def __call__(self):
 
-        quality_metrics_dict = {
-            "volume": self.vol, "skew": self.skew, "dimension": self.dim, "diagonal": self.diag
+        quality_metrics_dict = { 
+            "skew": self.skew, "dimension": self.dim, "diagonal": self.diag, "adjacent cell volume ratio": self.adjvol
         }
         
         acceptable_range = {
-            "volume": None, "skew": [0,0.5], "dimension": None, "diagonal": [0.65, 1]
+            "skew": [0,0.5], "dimension": None, "diagonal": [0.65, 1], "adjacent cell volume ratio": [1,3]
         }
         
-        t = PrettyTable(["Stat.", "Max.", "Min.", "Mean", "Std.", "Status"])
+        t = PrettyTable(["Stat.", "Max.", "Min.", "Mean", "Std.", "Range"])
 
         for k, v in quality_metrics_dict.items():
             listofstat = self.get_stats_from_array(pv.convert_array(v.active_scalars))

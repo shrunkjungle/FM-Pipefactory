@@ -9,7 +9,7 @@ mesh_info = pf.PipeParam(outer_radius = 0.0365,
                       thickness = 0.01, 
                       element_size = 0.01,
                       element_around_circum = 32, 
-                      elements_through_thickness = 3,
+                      elements_through_thickness = 2,
                       )
 
 mesh_info.add_straight(0.1)
@@ -60,11 +60,11 @@ mesh = pf.Pipe(outer_radius = mesh_info.outer_radius,
 
 mesh.degenerate_crack2(pf.AxialCrack(0.1, 0.0,0.05, 0.003,0.005, 0.0))
 mesh.degenerate_crack(pf.RadialCrack(0.2, 7.0, np.pi, 0.004, 0.01, 0.0))
-mesh.add_defect_displacement(pf.Dimple(0.3,0.0,0.02, 0.04))
+mesh.add_defect_displacement(pf.Dimple(0.3,0.0,0.012, 0.02))
 mesh.add_elements(pf.Cuboid(0.6, 6.0, 1.0, 0.05, 0.02))
 
 asd = mesh.quality_check()
-# asd.skew.plot()
+asd.skew.plot()
 
 # mesh.export(f'{name}.xdmf', save_point_data=True)
 # mesh_info.save_to_json(f'{name}', mesh.midline.tolist())
