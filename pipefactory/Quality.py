@@ -72,6 +72,7 @@ class Analyzer:
         self.skew = grid.compute_cell_quality(quality_measure="skew")
         self.dim = grid.compute_cell_quality(quality_measure="dimension")
         self.vol = grid.compute_cell_quality(quality_measure="volume")
+        self.diag = grid.compute_cell_quality(quality_measure="diagonal")
         
 
     def get_stats_from_array(self, array):
@@ -86,12 +87,23 @@ class Analyzer:
     def __call__(self):
 
         quality_metrics_dict = {
-            "volume": self.vol, "skew": self.skew, "dimension": self.dim}
+            "volume": self.vol, "skew": self.skew, "dimension": self.dim, "diagonal": self.diag
+        }
         
-        t = PrettyTable(["Stat.", "Max.", "Min.", "Mean", "Std."])
+        acceptable_range = {
+            "volume": None, "skew": [0,0.5], "dimension": None, "diagonal": [0.65, 1]
+        }
+        
+        t = PrettyTable(["Stat.", "Max.", "Min.", "Mean", "Std.", "Status"])
 
         for k, v in quality_metrics_dict.items():
-            t.add_row([k] + self.get_stats_from_array(pv.convert_array(v.active_scalars)))
+            listofstat = self.get_stats_from_array(pv.convert_array(v.active_scalars))
+            status = [" "]
+            if acceptable_range[k] is not None:
+                colour = '\033[92m' if (acceptable_range[k][1]>=listofstat[0]) and (acceptable_range[k][0]<=listofstat[1]) else '\033[91m'
+                status = [colour + f"{acceptable_range[k]}" + "\033[0m"]
+
+            t.add_row([k] + listofstat + status)
 
         print(t)
 

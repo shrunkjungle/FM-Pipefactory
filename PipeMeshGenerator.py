@@ -64,7 +64,7 @@ mesh.add_defect_displacement(pf.Dimple(0.3,0.0,0.02, 0.04))
 mesh.add_elements(pf.Cuboid(0.6, 6.0, 1.0, 0.05, 0.02))
 
 asd = mesh.quality_check()
-asd.skew.plot()
+# asd.skew.plot()
 
 # mesh.export(f'{name}.xdmf', save_point_data=True)
 # mesh_info.save_to_json(f'{name}', mesh.midline.tolist())
