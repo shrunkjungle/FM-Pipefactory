@@ -131,7 +131,7 @@ class PipeParam:
 
         self.current_dir = direction.tolist()
 
-    def save_to_json(self, name : str, midline : np.ndarray | None):
+    def save_to_json(self, name : str):
 
         self.pipe_parameters = {
             'Outer Radius': self.outer_radius,
@@ -145,8 +145,7 @@ class PipeParam:
         data_to_save = {
             'Pipe Parameters': self.pipe_parameters,
             'Mesh Sections': self.mesh_sections,
-            'Defects': None,
-            'Midline': midline
+            'Defects': None
         }
 
         from json import dump
