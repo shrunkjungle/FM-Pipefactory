@@ -17,6 +17,13 @@ class Defect():
         self.radius = pipe.outer_radius - pipe.thickness/2
         self.eac = pipe.element_around_circum
 
+    def convert_to_phi01(self, phi, dphi):
+        # Ensure there is no issue with rounding due to deg2rad when angle is equal to n.phi in mesh.
+        dphi_ = dphi +2.e-5 #* Breaks for >~ 360000 el around circum (very unlikely)
+        
+        phi0 = (phi - dphi_/2)%(2*np.pi)
+        phi1 = (phi + dphi_/2)%(2*np.pi)
+        return phi0, phi1
 
 class Dimple(Defect):
 
@@ -112,16 +119,17 @@ class Cuboid(Defect):
 
     def __init__(self,
                  s0 : float,
-                 phi0 : float,
-                 phi1 : float,
+                #  phi0 : float,
+                #  phi1 : float,
+                 phi : float,
+                 dphi : float,
                  length : float,
                  height : float):
         
         super().__init__()
         
         self.s0 = s0
-        self.phi0 = phi0+1.e-5 # Ensure there is no issue with rounding due to deg2rad when angle is equal to n.phi in mesh.
-        self.phi1 = phi1-1.e-5 #* Breaks for >~ 360000 el around circum (very unlikely)
+        self.phi0, self.phi1 = self.convert_to_phi01(phi, dphi)
         
         if(self.phi0 > self.phi1):
             self.dphi = 2.*np.pi - self.phi0 + self.phi1
@@ -262,19 +270,11 @@ class RadialCrack(Defect):
         
         self.s0 = s0
 
-        self.phi0, self.phi1 = self.convert_to_phi01(phi, dphi+2.e-5)
-
-        # self.phi0 = phi0+1.e-5 # Ensure there is no issue with rounding due to deg2rad when angle is equal to n.phi in mesh.
-        # self.phi1 = phi1-1.e-5 #* Breaks for >~ 360000 el around circum (very unlikely)
+        self.phi0, self.phi1 = self.convert_to_phi01(phi, dphi)
 
         self.w = crack_width
         self.d = crack_depth
         self.sd = smoothing_dist
-
-    def convert_to_phi01(self, phi, dphi):
-        phi0 = (phi - dphi/2)%(2*np.pi)
-        phi1 = (phi + dphi/2)%(2*np.pi)
-        return phi0, phi1
 
     def affected_idx(self, midline : np.ndarray):
         crack_mid_idx = np.argmin(np.abs(midline-self.s0))
