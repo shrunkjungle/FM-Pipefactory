@@ -44,7 +44,7 @@ def PartitionROM(input_json : str, limb_len : float = 1.6):
                 elements_through_thickness = mesh_info.elements_through_thickness)
 
     mesh.export(f'{input_json}_straight.xdmf')
-    mesh_info.save_to_json(f'{input_json}_straight', mesh.midline.tolist())
+    mesh_info.save_to_json(f'{input_json}_straight')
 
     for dict in data["Mesh Sections"]:
         if dict["type"] == "Bend":
@@ -68,7 +68,7 @@ def PartitionROM(input_json : str, limb_len : float = 1.6):
                         elements_through_thickness = mesh_info.elements_through_thickness)
 
             mesh.export(f'{input_json}_bend{bend_count}.xdmf')
-            mesh_info.save_to_json(f'{input_json}_bend{bend_count}', mesh.midline.tolist())
+            mesh_info.save_to_json(f'{input_json}_bend{bend_count}')
 
             current_dir = dict["direction_end"]
             bend_count += 1
