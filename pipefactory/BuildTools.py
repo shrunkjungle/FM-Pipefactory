@@ -12,7 +12,7 @@ def PartitionROM(input_json : str, limb_len : float = 1.6):
     input_json : str
         Name of the pipe to partition
     """
-    with open(f"{input_json}.json", 'r') as file:
+    with open(f"FM_FEM/fmfem/ReducedOrder/input_json/{input_json}.json", 'r') as file:
         data = load(file)
 
     param_dict = data["Pipe Parameters"]
@@ -43,8 +43,8 @@ def PartitionROM(input_json : str, limb_len : float = 1.6):
                 element_around_circum = mesh_info.element_around_circum, 
                 elements_through_thickness = mesh_info.elements_through_thickness)
 
-    mesh.export(f'{input_json}_straight.xdmf')
-    mesh_info.save_to_json(f'{input_json}_straight', mesh.midline.tolist())
+    mesh.export(f'FM_FEM/fmfem/ReducedOrder/input_xdmf/{input_json}_straight.xdmf')
+    mesh_info.save_to_json(f'FM_FEM/fmfem/ReducedOrder/input_json/{input_json}_straight', mesh.midline.tolist())
 
     for dict in data["Mesh Sections"]:
         if dict["type"] == "Bend":
@@ -67,8 +67,8 @@ def PartitionROM(input_json : str, limb_len : float = 1.6):
                         element_around_circum = mesh_info.element_around_circum, 
                         elements_through_thickness = mesh_info.elements_through_thickness)
 
-            mesh.export(f'{input_json}_bend{bend_count}.xdmf')
-            mesh_info.save_to_json(f'{input_json}_bend{bend_count}', mesh.midline.tolist())
+            mesh.export(f'FM_FEM/fmfem/ReducedOrder/input_xdmf/{input_json}_bend{bend_count}.xdmf')
+            mesh_info.save_to_json(f'FM_FEM/fmfem/ReducedOrder/input_json/{input_json}_bend{bend_count}', mesh.midline.tolist())
 
             current_dir = dict["direction_end"]
             bend_count += 1
@@ -131,7 +131,7 @@ class PipeParam:
 
         self.current_dir = direction.tolist()
 
-    def save_to_json(self, name : str):
+    def save_to_json(self, name : str, materials = None, defects = None):
 
         self.pipe_parameters = {
             'Outer Radius': self.outer_radius,
@@ -144,8 +144,9 @@ class PipeParam:
 
         data_to_save = {
             'Pipe Parameters': self.pipe_parameters,
+            'Material Properties': materials,
             'Mesh Sections': self.mesh_sections,
-            'Defects': None
+            'Defects': defects
         }
 
         from json import dump
