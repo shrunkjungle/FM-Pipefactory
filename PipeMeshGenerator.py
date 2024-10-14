@@ -82,6 +82,7 @@ def generate_parameter_combinations(parameters, sample_num, ele_around_circum):
                 dimple_params = ["s0", "phi0", "depth", "radius"]
                 weld_params = ["s0", "Aout", "Ain", "ell_out", "ell_in"]
                 radialcrack_params = ["s0", "phi0", "phi_span", "width", "depth", "smoothing_dist"]
+                axialcrack_params = ["s0", "phi", "length", "width", "depth", "smoothing_dist"]
                 attachedcuboid_params = ["s0", "phi0", "phi_span", "length", "height"]
                 for defect in defect_types:
                     if f'{defect}' not in sample["Defects"]:
@@ -100,6 +101,9 @@ def generate_parameter_combinations(parameters, sample_num, ele_around_circum):
                                 sample["Defects"][f'{defect}'][param] = sample.pop(f"{defect}_{param}")
                             sample["Defects"][f'{defect}']["phi"] = sample["Defects"][f'{defect}'].pop("phi0")
                             sample["Defects"][f'{defect}']["dphi"] = sample["Defects"][f'{defect}'].pop("phi_span")
+                        elif defect == "AxialCrack":
+                            for param in axialcrack_params:
+                                sample["Defects"][f'{defect}'][param] = sample.pop(f"{defect}_{param}")
                         elif defect == "AttachedCuboid":
                             for param in attachedcuboid_params:
                                 sample["Defects"][f'{defect}'][param] = sample.pop(f"{defect}_{param}")
@@ -125,6 +129,9 @@ def generate_parameter_combinations(parameters, sample_num, ele_around_circum):
                                         sample["Defects"][f'{defect}_{i}'][param] = sample.pop(f"{defect}_{param}_{i}")
                                     sample["Defects"][f'{defect}_{i}']["phi"] = sample["Defects"][f'{defect}_{i}'].pop("phi0")
                                     sample["Defects"][f'{defect}_{i}']["dphi"] = sample["Defects"][f'{defect}_{i}'].pop("phi_span")
+                                elif defect == "AxialCrack":
+                                    for param in axialcrack_params:
+                                        sample["Defects"][f'{defect}_{i}'][param] = sample.pop(f"{defect}_{param}_{i}")
                                 elif defect == "AttachedCuboid":
                                     for param in attachedcuboid_params:
                                         sample["Defects"][f'{defect}_{i}'][param] = sample.pop(f"{defect}_{param}_{i}")
@@ -272,9 +279,9 @@ elif mesh_complexity == 'Sampling':
             if "AxialCrack" in defect:
                 mesh.degenerate_crack2(AxialCrack(float(params["s0"]), float(params["phi"]), float(params["length"]), float(params["width"]), float(params["depth"]), float(params["smoothing_dist"])))
             if "AttachedCuboid" in defect:
-                mesh.add_elements(Cuboid(float(params["s0"]), float(params["dphi"]), float(params["length"]), float(params["height"])))
+                mesh.add_elements(Cuboid(float(params["s0"]), float(params["phi"]), float(params["dphi"]), float(params["length"]), float(params["height"])))
 
-        mesh.export(f'{name}_meshsamples/{name}_{i:0{7}d}.xdmf')
+        mesh.export(f'{name}_meshsamples/{name}_{i:0{7}d}.xdmf', save_point_data=True)
         mesh_info.save_to_json(f'{name}_meshsamples/{name}_{i:0{7}d}', materials=sample["Material Properties"], defects=list(sample["Defects"].items()))
         print(i)
         i += 1
