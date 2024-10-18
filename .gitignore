@@ -173,3 +173,4 @@ cython_debug/
 # Test scripts
 test.py
 PipeMeshGenerator.py
+pmg.py

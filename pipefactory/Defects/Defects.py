@@ -16,10 +16,12 @@ class Defect():
         self.ett = pipe.ett
         self.radius = pipe.outer_radius - pipe.thickness/2
         self.eac = pipe.element_around_circum
+        self.es = pipe.element_size
 
-    def convert_to_phi01(self, phi, dphi):
+    def convert_to_phi01(self, phi, dphi, degen=False):
         # Ensure there is no issue with rounding due to deg2rad when angle is equal to n.phi in mesh.
-        dphi_ = dphi +2.e-5 #* Breaks for >~ 360000 el around circum (very unlikely)
+        dphi_ = dphi +2.e-5#* Breaks for >~ 360000 el around circum (very unlikely)
+        dphi_ = dphi_ - 4*np.pi/self.eac if degen else dphi_
         
         phi0 = (phi - dphi_/2)%(2*np.pi)
         phi1 = (phi + dphi_/2)%(2*np.pi)
@@ -36,7 +38,7 @@ class Dimple(Defect):
         super().__init__()
         
         self.s0 = s0
-        self.phi0 = phi0
+        self.phi0 = phi0 % (2*np.pi)
         self.A = A
         self.ell = ell
 
@@ -100,7 +102,7 @@ class Hole(Defect):
         super().__init__()
         
         self.s0 = s0
-        self.phi0 = phi0
+        self.phi0 = phi0 % (2*np.pi)
         self.hole_radius = radius
 
     def __call__(self,
@@ -119,8 +121,6 @@ class Cuboid(Defect):
 
     def __init__(self,
                  s0 : float,
-                #  phi0 : float,
-                #  phi1 : float,
                  phi : float,
                  dphi : float,
                  length : float,
@@ -258,8 +258,6 @@ class RadialCrack(Defect):
 
     def __init__(self,
                  s0 : float,
-                #  phi0 : float,
-                #  phi1 : float,
                  phi : float,
                  dphi : float,
                  crack_width : float,
@@ -270,11 +268,15 @@ class RadialCrack(Defect):
         
         self.s0 = s0
 
-        self.phi0, self.phi1 = self.convert_to_phi01(phi, dphi)
+        self.phi, self.dphi = phi, dphi
+        # self.phi0, self.phi1 = self.convert_to_phi01(phi, dphi)
 
         self.w = crack_width
         self.d = crack_depth
         self.sd = smoothing_dist
+
+    def adjust_phi(self):
+        self.phi0, self.phi1 = self.convert_to_phi01(self.phi, self.dphi, degen=True)
 
     def affected_idx(self, midline : np.ndarray):
         crack_mid_idx = np.argmin(np.abs(midline-self.s0))
@@ -424,7 +426,7 @@ class AxialCrack(Defect):
         return theta[map2pi([crack_idx])], theta[map2pi(left_idx)].tolist(), theta[map2pi(right_idx)].tolist()
 
     def crack_mid_idxs(self, midline : np.ndarray):
-        all_idx = np.nonzero(np.abs(midline-self.s0)<self.l/2)[0].tolist()
+        all_idx = np.nonzero(np.abs(midline-self.s0)<(self.l/2-self.es+1.e-6))[0].tolist()
         return all_idx
     
     def stepped_depth(self):
