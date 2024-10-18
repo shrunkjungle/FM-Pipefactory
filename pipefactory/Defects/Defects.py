@@ -16,6 +16,7 @@ class Defect():
         self.ett = pipe.ett
         self.radius = pipe.outer_radius - pipe.thickness/2
         self.eac = pipe.element_around_circum
+        self.es = pipe.element_size
 
     def convert_to_phi01(self, phi, dphi, degen=False):
         # Ensure there is no issue with rounding due to deg2rad when angle is equal to n.phi in mesh.
@@ -425,7 +426,7 @@ class AxialCrack(Defect):
         return theta[map2pi([crack_idx])], theta[map2pi(left_idx)].tolist(), theta[map2pi(right_idx)].tolist()
 
     def crack_mid_idxs(self, midline : np.ndarray):
-        all_idx = np.nonzero(np.abs(midline-self.s0)<self.l/2)[0].tolist()
+        all_idx = np.nonzero(np.abs(midline-self.s0)<(self.l/2-self.es+1.e-6))[0].tolist()
         return all_idx
     
     def stepped_depth(self):
