@@ -655,6 +655,7 @@ class Pipe():
     def degenerate_crack(self, crack_instance : RadialCrack):
 
         crack_instance.read_mesh_param(self)
+        crack_instance.adjust_phi()
         crack_instance.stepped_depth()
 
         crack_mid_idx, left_idx, right_idx = crack_instance.affected_idx(self.midline)
