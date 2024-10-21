@@ -131,7 +131,7 @@ class PipeParam:
 
         self.current_dir = direction.tolist()
 
-    def save_to_json(self, name : str):
+    def save_to_json(self, name : str, materials = None, defects = None):
 
         self.pipe_parameters = {
             'Outer Radius': self.outer_radius,
@@ -144,8 +144,9 @@ class PipeParam:
 
         data_to_save = {
             'Pipe Parameters': self.pipe_parameters,
+            'Materials': materials,
             'Mesh Sections': self.mesh_sections,
-            'Defects': None
+            'Defects': defects
         }
 
         from json import dump
