@@ -102,27 +102,41 @@ def generate_parameter_combinations(parameters, sample_num, ele_around_circum):
                             for param in radialcrack_params:
                                 sample["Defects"][f'{defect}'][param] = sample.pop(f"{defect}_{param}")
                             sample["Defects"][f'{defect}']["phi"] = sample["Defects"][f'{defect}'].pop("phi0")
-                            dphi_low = parameters[f"{defect}_phi_span"][0]
-                            odds = range(1, int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)), 2)
-                            evens = range(0, int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)), 2)
+
                             dphi_sample = sample["Defects"][f'{defect}'].pop("phi_span")
-                            if np.absolute(np.mod(sample["Defects"][f'{defect}']["phi"], np.deg2rad(delta)) - np.deg2rad(delta/2)) > np.deg2rad(delta/4):
-                                if np.mod(np.ceil(dphi_sample), 2) == 0:
-                                    if dphi_sample > int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)):
-                                        dphi_sample = np.random.choice(evens)
-                                    else:
-                                        dphi_sample = np.ceil(dphi_sample)  ############## ANGLE BIAS!
+                            if f"{defect}_phi_span" in constant_params:
+                                if np.mod(dphi_sample/np.deg2rad(delta), 2) == 0:
+                                    sample["Defects"][f'{defect}']['phi'] = round(sample["Defects"][f'{defect}']['phi']/np.deg2rad(delta)) * np.deg2rad(delta)
+                                elif np.mod(dphi_sample/np.deg2rad(delta), 2) == 1:
+                                    sample["Defects"][f'{defect}']['phi'] = min(range(1, 2*ele_around_circum, 2), key=lambda x:abs(x-sample["Defects"][f'{defect}']['phi']/np.deg2rad(delta/2))) * np.deg2rad(delta/2)
+                                    if sample["Defects"][f'{defect}']['phi'] > parameters[f'{defect}_phi0'][1]:
+                                        sample["Defects"][f'{defect}']['phi'] -= 2*np.deg2rad(delta)
+                                    elif sample["Defects"][f'{defect}']['phi'] < parameters[f'{defect}_phi0'][0]:
+                                        sample["Defects"][f'{defect}']['phi'] += 2*np.deg2rad(delta)
                                 else:
-                                    dphi_sample = np.floor(dphi_sample)
+                                    raise ValueError("Some rounding has gone wrong")
                             else:
-                                if np.mod(np.ceil(dphi_sample), 2) != 0:
-                                    if dphi_sample > int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)):
-                                        dphi_sample = np.random.choice(odds)
+                                dphi_low = parameters[f"{defect}_phi_span"][0]
+                                odds = range(1, int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)), 2)
+                                evens = range(0, int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)), 2)
+                                if np.absolute(np.mod(sample["Defects"][f'{defect}']["phi"], np.deg2rad(delta)) - np.deg2rad(delta/2)) > np.deg2rad(delta/4):
+                                    if np.mod(np.ceil(dphi_sample), 2) == 0:
+                                        if dphi_sample > int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)):
+                                            dphi_sample = np.random.choice(evens)
+                                        else:
+                                            dphi_sample = np.ceil(dphi_sample)
                                     else:
-                                        dphi_sample = np.ceil(dphi_sample)
+                                        dphi_sample = np.floor(dphi_sample)
                                 else:
-                                    dphi_sample = np.floor(dphi_sample)
-                            sample["Defects"][f'{defect}']["dphi"] = np.mod(dphi_low + (dphi_sample * np.deg2rad(delta)), 2*np.pi)
+                                    if np.mod(np.ceil(dphi_sample), 2) != 0:
+                                        if dphi_sample > int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)):
+                                            dphi_sample = np.random.choice(odds)
+                                        else:
+                                            dphi_sample = np.ceil(dphi_sample)
+                                    else:
+                                        dphi_sample = np.floor(dphi_sample)
+                                dphi_sample = np.mod(dphi_low + (dphi_sample * np.deg2rad(delta)), 2*np.pi)
+                            sample["Defects"][f'{defect}']["dphi"] = dphi_sample
                         elif defect == "AxialCrack":
                             for param in axialcrack_params:
                                 sample["Defects"][f'{defect}'][param] = sample.pop(f"{defect}_{param}")
@@ -130,27 +144,41 @@ def generate_parameter_combinations(parameters, sample_num, ele_around_circum):
                             for param in attachedcuboid_params:
                                 sample["Defects"][f'{defect}'][param] = sample.pop(f"{defect}_{param}")
                             sample["Defects"][f'{defect}']["phi"] = sample["Defects"][f'{defect}'].pop("phi0")
-                            dphi_low = parameters[f"{defect}_phi_span"][0]
-                            odds = range(1, int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)), 2)
-                            evens = range(0, int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)), 2)
+                            
                             dphi_sample = sample["Defects"][f'{defect}'].pop("phi_span")
-                            if np.absolute(np.mod(sample["Defects"][f'{defect}']["phi"], np.deg2rad(delta)) - np.deg2rad(delta/2)) > np.deg2rad(delta/4):
-                                if np.mod(np.ceil(dphi_sample), 2) == 0:
-                                    if dphi_sample > int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)):
-                                        dphi_sample = np.random.choice(evens)
-                                    else:
-                                        dphi_sample = np.ceil(dphi_sample)  ############## ANGLE BIAS!
+                            if f"{defect}_phi_span" in constant_params:
+                                if np.mod(dphi_sample/np.deg2rad(delta), 2) == 0:
+                                    sample["Defects"][f'{defect}']['phi'] = round(sample["Defects"][f'{defect}']['phi']/np.deg2rad(delta)) * np.deg2rad(delta)
+                                elif np.mod(dphi_sample/np.deg2rad(delta), 2) == 1:
+                                    sample["Defects"][f'{defect}']['phi'] = min(range(1, 2*ele_around_circum, 2), key=lambda x:abs(x-sample["Defects"][f'{defect}']['phi']/np.deg2rad(delta/2))) * np.deg2rad(delta/2)
+                                    if sample["Defects"][f'{defect}']['phi'] > parameters[f'{defect}_phi0'][1]:
+                                        sample["Defects"][f'{defect}']['phi'] -= 2*np.deg2rad(delta)
+                                    elif sample["Defects"][f'{defect}']['phi'] < parameters[f'{defect}_phi0'][0]:
+                                        sample["Defects"][f'{defect}']['phi'] += 2*np.deg2rad(delta)
                                 else:
-                                    dphi_sample = np.floor(dphi_sample)
+                                    raise ValueError("Some rounding has gone wrong")
                             else:
-                                if np.mod(np.ceil(dphi_sample), 2) != 0:
-                                    if dphi_sample > int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)):
-                                        dphi_sample = np.random.choice(odds)
+                                dphi_low = parameters[f"{defect}_phi_span"][0]
+                                odds = range(1, int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)), 2)
+                                evens = range(0, int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)), 2)
+                                if np.absolute(np.mod(sample["Defects"][f'{defect}']["phi"], np.deg2rad(delta)) - np.deg2rad(delta/2)) > np.deg2rad(delta/4):
+                                    if np.mod(np.ceil(dphi_sample), 2) == 0:
+                                        if dphi_sample > int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)):
+                                            dphi_sample = np.random.choice(evens)
+                                        else:
+                                            dphi_sample = np.ceil(dphi_sample)
                                     else:
-                                        dphi_sample = np.ceil(dphi_sample)
+                                        dphi_sample = np.floor(dphi_sample)
                                 else:
-                                    dphi_sample = np.floor(dphi_sample)
-                            sample["Defects"][f'{defect}']["dphi"] = np.mod(dphi_low + (dphi_sample * np.deg2rad(delta)), 2*np.pi)
+                                    if np.mod(np.ceil(dphi_sample), 2) != 0:
+                                        if dphi_sample > int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)):
+                                            dphi_sample = np.random.choice(odds)
+                                        else:
+                                            dphi_sample = np.ceil(dphi_sample)
+                                    else:
+                                        dphi_sample = np.floor(dphi_sample)
+                                dphi_sample = np.mod(dphi_low + (dphi_sample * np.deg2rad(delta)), 2*np.pi)
+                            sample["Defects"][f'{defect}']["dphi"] = dphi_sample
                     else:
                         added = False
                         i = 1
@@ -170,27 +198,41 @@ def generate_parameter_combinations(parameters, sample_num, ele_around_circum):
                                     for param in radialcrack_params:
                                         sample["Defects"][f'{defect}_{i}'][param] = sample.pop(f"{defect}_{param}_{i}")
                                     sample["Defects"][f'{defect}_{i}']["phi"] = sample["Defects"][f'{defect}_{i}'].pop("phi0")
-                                    dphi_low = parameters[f"{defect}_phi_span"][0]
-                                    odds = range(1, int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)), 2)
-                                    evens = range(0, int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)), 2)
-                                    dphi_sample = sample["Defects"][f'{defect}'].pop("phi_span")
-                                    if np.absolute(np.mod(sample["Defects"][f'{defect}']["phi"], np.deg2rad(delta)) - np.deg2rad(delta/2)) > np.deg2rad(delta/4):
-                                        if np.mod(np.ceil(dphi_sample), 2) == 0:
-                                            if dphi_sample > int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)):
-                                                dphi_sample = np.random.choice(evens)
-                                            else:
-                                                dphi_sample = np.ceil(dphi_sample)  ############## ANGLE BIAS!
+                                    
+                                    dphi_sample = sample["Defects"][f'{defect}_{i}'].pop("phi_span")
+                                    if f'{defect}_phi_span_{i}' in constant_params:
+                                        if np.mod(dphi_sample/np.deg2rad(delta), 2) == 0:
+                                            sample["Defects"][f'{defect}_{i}']['phi'] = round(sample["Defects"][f'{defect}_{i}']['phi']/np.deg2rad(delta)) * np.deg2rad(delta)
+                                        elif np.mod(dphi_sample/np.deg2rad(delta), 2) == 1:
+                                            sample["Defects"][f'{defect}_{i}']['phi'] = min(range(1, 2*ele_around_circum, 2), key=lambda x:abs(x-sample["Defects"][f'{defect}_{i}']['phi']/np.deg2rad(delta/2))) * np.deg2rad(delta/2)
+                                            if sample["Defects"][f'{defect}_{i}']['phi'] > parameters[f'{defect}_phi0_{i}'][1]:
+                                                sample["Defects"][f'{defect}_{i}']['phi'] -= 2*np.deg2rad(delta)
+                                            elif sample["Defects"][f'{defect}_{i}']['phi'] < parameters[f'{defect}_phi0_{i}'][0]:
+                                                sample["Defects"][f'{defect}_{i}']['phi'] += 2*np.deg2rad(delta)
                                         else:
-                                            dphi_sample = np.floor(dphi_sample)
+                                            raise ValueError("Some rounding has gone wrong")
                                     else:
-                                        if np.mod(np.ceil(dphi_sample), 2) != 0:
-                                            if dphi_sample > int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)):
-                                                dphi_sample = np.random.choice(odds)
+                                        dphi_low = parameters[f'{defect}_phi_span_{i}'][0]
+                                        odds = range(1, int((parameters[f'{defect}_phi_span_{i}'][1] - parameters[f'{defect}_phi_span_{i}'][0]) / np.deg2rad(delta)), 2)
+                                        evens = range(0, int((parameters[f'{defect}_phi_span_{i}'][1] - parameters[f'{defect}_phi_span_{i}'][0]) / np.deg2rad(delta)), 2)
+                                        if np.absolute(np.mod(sample["Defects"][f'{defect}_{i}']["phi"], np.deg2rad(delta)) - np.deg2rad(delta/2)) > np.deg2rad(delta/4):
+                                            if np.mod(np.ceil(dphi_sample), 2) == 0:
+                                                if dphi_sample > int((parameters[f'{defect}_phi_span_{i}'][1] - parameters[f'{defect}_phi_span_{i}'][0]) / np.deg2rad(delta)):
+                                                    dphi_sample = np.random.choice(evens)
+                                                else:
+                                                    dphi_sample = np.ceil(dphi_sample)
                                             else:
-                                                dphi_sample = np.ceil(dphi_sample)
+                                                dphi_sample = np.floor(dphi_sample)
                                         else:
-                                            dphi_sample = np.floor(dphi_sample)
-                                    sample["Defects"][f'{defect}']["dphi"] = np.mod(dphi_low + (dphi_sample * np.deg2rad(delta)), 2*np.pi)
+                                            if np.mod(np.ceil(dphi_sample), 2) != 0:
+                                                if dphi_sample > int((parameters[f'{defect}_phi_span_{i}'][1] - parameters[f'{defect}_phi_span_{i}'][0]) / np.deg2rad(delta)):
+                                                    dphi_sample = np.random.choice(odds)
+                                                else:
+                                                    dphi_sample = np.ceil(dphi_sample)
+                                            else:
+                                                dphi_sample = np.floor(dphi_sample)
+                                        dphi_sample = np.mod(dphi_low + (dphi_sample * np.deg2rad(delta)), 2*np.pi)
+                                    sample["Defects"][f'{defect}_{i}']["dphi"] = dphi_sample
                                 elif defect == "AxialCrack":
                                     for param in axialcrack_params:
                                         sample["Defects"][f'{defect}_{i}'][param] = sample.pop(f"{defect}_{param}_{i}")
@@ -198,27 +240,41 @@ def generate_parameter_combinations(parameters, sample_num, ele_around_circum):
                                     for param in attachedcuboid_params:
                                         sample["Defects"][f'{defect}_{i}'][param] = sample.pop(f"{defect}_{param}_{i}")
                                     sample["Defects"][f'{defect}_{i}']["phi"] = sample["Defects"][f'{defect}_{i}'].pop("phi0")
-                                    dphi_low = parameters[f"{defect}_phi_span"][0]
-                                    odds = range(1, int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)), 2)
-                                    evens = range(0, int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)), 2)
-                                    dphi_sample = sample["Defects"][f'{defect}'].pop("phi_span")
-                                    if np.absolute(np.mod(sample["Defects"][f'{defect}']["phi"], np.deg2rad(delta)) - np.deg2rad(delta/2)) > np.deg2rad(delta/4):
-                                        if np.mod(np.ceil(dphi_sample), 2) == 0:
-                                            if dphi_sample > int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)):
-                                                dphi_sample = np.random.choice(evens)
-                                            else:
-                                                dphi_sample = np.ceil(dphi_sample)  ############## ANGLE BIAS!
+                                    
+                                    dphi_sample = sample["Defects"][f'{defect}_{i}'].pop("phi_span")
+                                    if f'{defect}_phi_span_{i}' in constant_params:
+                                        if np.mod(dphi_sample/np.deg2rad(delta), 2) == 0:
+                                            sample["Defects"][f'{defect}_{i}']['phi'] = round(sample["Defects"][f'{defect}_{i}']['phi']/np.deg2rad(delta)) * np.deg2rad(delta)
+                                        elif np.mod(dphi_sample/np.deg2rad(delta), 2) == 1:
+                                            sample["Defects"][f'{defect}_{i}']['phi'] = min(range(1, 2*ele_around_circum, 2), key=lambda x:abs(x-sample["Defects"][f'{defect}_{i}']['phi']/np.deg2rad(delta/2))) * np.deg2rad(delta/2)
+                                            if sample["Defects"][f'{defect}_{i}']['phi'] > parameters[f'{defect}_phi0_{i}'][1]:
+                                                sample["Defects"][f'{defect}_{i}']['phi'] -= 2*np.deg2rad(delta)
+                                            elif sample["Defects"][f'{defect}_{i}']['phi'] < parameters[f'{defect}_phi0_{i}'][0]:
+                                                sample["Defects"][f'{defect}_{i}']['phi'] += 2*np.deg2rad(delta)
                                         else:
-                                            dphi_sample = np.floor(dphi_sample)
+                                            raise ValueError("Some rounding has gone wrong")
                                     else:
-                                        if np.mod(np.ceil(dphi_sample), 2) != 0:
-                                            if dphi_sample > int((parameters[f"{defect}_phi_span"][1] - parameters[f"{defect}_phi_span"][0]) / np.deg2rad(delta)):
-                                                dphi_sample = np.random.choice(odds)
+                                        dphi_low = parameters[f'{defect}_phi_span_{i}'][0]
+                                        odds = range(1, int((parameters[f'{defect}_phi_span_{i}'][1] - parameters[f'{defect}_phi_span_{i}'][0]) / np.deg2rad(delta)), 2)
+                                        evens = range(0, int((parameters[f'{defect}_phi_span_{i}'][1] - parameters[f'{defect}_phi_span_{i}'][0]) / np.deg2rad(delta)), 2)
+                                        if np.absolute(np.mod(sample["Defects"][f'{defect}_{i}']["phi"], np.deg2rad(delta)) - np.deg2rad(delta/2)) > np.deg2rad(delta/4):
+                                            if np.mod(np.ceil(dphi_sample), 2) == 0:
+                                                if dphi_sample > int((parameters[f'{defect}_phi_span_{i}'][1] - parameters[f'{defect}_phi_span_{i}'][0]) / np.deg2rad(delta)):
+                                                    dphi_sample = np.random.choice(evens)
+                                                else:
+                                                    dphi_sample = np.ceil(dphi_sample)
                                             else:
-                                                dphi_sample = np.ceil(dphi_sample)
+                                                dphi_sample = np.floor(dphi_sample)
                                         else:
-                                            dphi_sample = np.floor(dphi_sample)
-                                    sample["Defects"][f'{defect}']["dphi"] = np.mod(dphi_low + (dphi_sample * np.deg2rad(delta)), 2*np.pi)
+                                            if np.mod(np.ceil(dphi_sample), 2) != 0:
+                                                if dphi_sample > int((parameters[f'{defect}_phi_span_{i}'][1] - parameters[f'{defect}_phi_span_{i}'][0]) / np.deg2rad(delta)):
+                                                    dphi_sample = np.random.choice(odds)
+                                                else:
+                                                    dphi_sample = np.ceil(dphi_sample)
+                                            else:
+                                                dphi_sample = np.floor(dphi_sample)
+                                        dphi_sample = np.mod(dphi_low + (dphi_sample * np.deg2rad(delta)), 2*np.pi)
+                                    sample["Defects"][f'{defect}_{i}']["dphi"] = dphi_sample
                                 added = True
                             else:
                                 i += 1
